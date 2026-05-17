@@ -99,3 +99,41 @@ assert(isWellDefined(4,db7))
 assert(da7 === innerDerivation(b b a b a b a))
 assert(db7 === innerDerivation(a b a b a b a))
 ///
+
+TEST///
+L = lieAlgebra{a,b,c}
+A = lieSubAlgebra{a,b c}
+S = lieSubSpace{a,b c}
+assert(dims(1,4,A) === {1,1,1,1})
+assert(dims(1,4,S) === {1,1,0,0})
+///
+
+TEST///
+L = lieAlgebra{a,b,c}
+I = lieIdeal{a b}
+J = lieIdeal{b c}
+T = I+J
+U = I@J
+assert(dims(1,5,I) === {0,1,3,8,24})
+assert(dims(1,5,J) === {0,1,3,8,24})
+assert(dims(1,5,T) === {0,2,6,15,42})
+assert(dims(1,5,U) === {0,0,0,1,6})
+assert(dims(1,5,T) + dims(1,5,U) === dims(1,5,I) + dims(1,5,J))
+///
+
+TEST///
+L = lieAlgebra{a,b}
+Z = zeroIdeal L
+assert(Z === lieIdeal{0_L,a a})
+assert(dims(1,5,Z) === {0,0,0,0,0})
+///
+
+TEST///
+L = lieAlgebra{a,b,c}
+I = lieIdeal{a a c+b a c-a b a,c c a-b b a}
+M = L/I
+J = lieIdeal{a b}
+A = quotient(J,lieSubAlgebra{a c})
+assert(dims(1,3,A) === {2,3,5})
+assert(member((c b) (a c),J))
+///
