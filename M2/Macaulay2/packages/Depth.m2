@@ -873,15 +873,16 @@ TEST///  --- test 15
 ///
 TEST///  --- test 16
      S = ZZ/101[a,b,c,d]
-     K = koszulComplex vars S
-     apply(numgens S, i-> depth coker K.dd_(i+1))
+     ---K = koszulComplex vars S
+     ---apply(numgens S, i-> depth coker K.dd_(i+1))
 
      I = ideal"ab,bc,cd,da"
-     codim I
+     assert(codim I == 2)
      setRandomSeed 0
-     inhomogeneousSystemOfParameters I
-     systemOfParameters 
-     systemOfParameters(I, Density => .1, Attempts => 1000, Verbose => true)
+--inhomogeneousSystemOfParameters I
+     assert(inhomogeneousSystemOfParameters I === matrix {{b*c+c*d,b*c+a*d}})
+     --systemOfParameters 
+     assert(systemOfParameters(I, Density => .1, Attempts => 1000, Verbose => true) === ideal "ab,cd")
 ///
 TEST///  --- test 17
 S = QQ[a..e]
