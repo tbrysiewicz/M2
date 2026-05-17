@@ -3547,7 +3547,7 @@ indented = completed
 ** = need to begin
 
 arrangement(List, Ring)	 -- not clear what to do here
-arrangement(List, Matrix)				    
+arrangement(List, Matrix)
 arrangement String
 arrangement Flat
 arrangement(Flat, Validate=>true)
@@ -3620,6 +3620,8 @@ TEST ///
 R = ZZ[x,y,z];
 trivial = arrangement({},R);
 nontrivial = arrangement({x},R);
+assert(instance(trivial, Arrangement))
+assert(instance(nontrivial, CentralArrangement))
 assert(rank trivial == 0)
 assert(ring trivial === R)
 assert(0 == matrix trivial)
@@ -3643,6 +3645,7 @@ A3mat = arrangement(matrix {{1, 1, 1, 0, 0, 0},	    -- arrangement(List, Matrix)
 	             {-1, 0, 0, 1, 1, 0},
 		     {0, -1, 0, -1, 0, 1},
 		     {0, 0, -1, 0, -1, -1}}, R)
+assert(instance(A3, CentralArrangement))
 assert(A3 === A3poly)
 assert(A3 === A3mat) 
 assert(A3 === sub(A3ring, map(R, ring A3ring, R_*)))	    -- sub(Arrangement, RingMap)
@@ -3658,6 +3661,7 @@ assert(matroid (A3**QQ) === matroid coefficients (A3**QQ))  -- matroid CentralAr
 -----------------------------------------------------------
 TEST ///
 X3 = arrangement "X3"					    -- arrangement String
+assert(instance(X3, CentralArrangement))
 assert(isDecomposable X3)				    -- isDecomposable Arrangement
 assert(multiplierIdeal(2,X3) == multiplierIdeal(11/5,X3))		    -- multiplierIdeal(ZZ, CentralArrangement)
 time I1 = orlikTerao(X3);				    -- orlikTerao CentralArrangement
@@ -3717,6 +3721,7 @@ TEST ///
 A3 = typeA 3
 
 F = flat(A3, {0,1,3})
+assert(instance(F, Flat))
 assert(try(flat(A3, {0,1}); false) else true)	 -- `Validate=>true`
 assert(A3 === arrangement F)			 -- `arrangement Flat`
 assert(toList F === {0,1,3})			 -- `toList Flat`

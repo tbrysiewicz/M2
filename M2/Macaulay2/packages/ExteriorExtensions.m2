@@ -1020,3 +1020,9 @@ viewHelp ExteriorExtensions
  ea = exteriorExtension(3, 6, QQ);
 B = structureTensor(ea);
 #keys B
+
+TEST ///
+    t = symbol t
+    E = exteriorExtension(2, 4, t, QQ)
+    assert(instance(E, ExteriorExtension))    
+///
