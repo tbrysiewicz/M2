@@ -4,7 +4,7 @@ newPackage(
     Date=>"Jan 17, 2021",
     Authors=> {
         {Name=>"Taylor Brysiewicz",
-	 Email=>"tbrysiew@uwo.com",
+	 Email=>"tbrysiew@uwo.ca",
 	 HomePage=>"https://sites.google.com/view/taylorbrysiewicz"},
         {Name=>"Jose Israel Rodriguez",
 	 Email=>"Jose@math.wisc.edu",
