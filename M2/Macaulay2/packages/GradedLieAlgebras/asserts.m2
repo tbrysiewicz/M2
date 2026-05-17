@@ -80,3 +80,22 @@ I=kernel f
 S=image f
 assert(dims(1,8,L/I)===dims(1,8,S))
 ///
+
+TEST///
+L = lieAlgebra{a,b}/{a a a b,b b b a}
+da61 = lieDerivation{a b a b a b a,0_L}
+db61 = lieDerivation{0_L,a b a b a b a}
+da62 = lieDerivation{b b a b a b a,0_L}
+db62 = lieDerivation{0_L,b b a b a b a}
+assert(isWellDefined(4,da61))
+assert(not isWellDefined(4,db61))
+assert(not isWellDefined(4,da62))
+assert(isWellDefined(4,db62))
+assert(da61 + db62 === innerDerivation(b a b a b a))
+da7 = lieDerivation{b a b a b a b a,0_L}
+db7 = lieDerivation{0_L,b a b a b a b a}
+assert(isWellDefined(4,da7))
+assert(isWellDefined(4,db7))
+assert(da7 === innerDerivation(b b a b a b a))
+assert(db7 === innerDerivation(a b a b a b a))
+///
