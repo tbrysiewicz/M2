@@ -29,7 +29,7 @@ newPackage(
 
 export {
     "arrangementLibrary", 
-    -- types
+    -- type
     "Arrangement", 
     "CentralArrangement",
     "Flat",     
@@ -3629,6 +3629,9 @@ assert(0 == coefficients trivial)
 assert(deletion(nontrivial,x) == trivial)
 assert(trivial++trivial != trivial)
 assert(trivial**QQ != trivial)
+nontrivialplustrivial = arrangementSum(nontrivial, trivial)
+assert(instance(nontrivialplustrivial, CentralArrangement))
+assert(numgens ring nontrivialplustrivial == 6)
 ///
 
 
