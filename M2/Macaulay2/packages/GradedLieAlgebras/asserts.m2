@@ -210,3 +210,44 @@ use L
 assert(zm a === 0_M)
 assert(differential L === zeroDerivation L)
 ///
+
+-- center: the ideal of central elements of a Lie algebra
+TEST///
+L = lieAlgebra{a,b,c}/{a b,a c,c b c,b b c b}
+assert(dims(1,5,center L) === {1,0,1,0,0})
+///
+
+-- firstDegree (degree of an element or derivation) and computedDegree (degree computed so far)
+TEST///
+L = lieAlgebra({a,b,c},Weights=>{1,2,3})
+assert(dims(1,3,L) === {1,1,2})
+assert(computedDegree L === 3)
+assert(firstDegree(c a b+a b c) === 6)
+assert(firstDegree(lieDerivation{a c b,b b c,c c b}) === 5)
+///
+
+-- lieRing and mbRing: the internal polynomial rings representing a Lie algebra
+TEST///
+L = lieAlgebra{a,b,c}/{a b-a c}
+dims(1,5,L)
+assert(instance(L#cache.lieRing, PolynomialRing))
+assert(instance(L#cache.mbRing, PolynomialRing))
+///
+
+-- listMultiply: pairwise products of two lists; row i is x#i bracketed with every element of y
+TEST///
+K = lieAlgebra{a,b,c}
+b1 = basis(1,K)
+b2 = basis(2,K)
+lm = listMultiply(b1,b2)
+assert(#lm === #b1)
+assert(#(lm#0) === #b2)
+assert(lm#0#0 === b1#0 b2#0)
+///
+
+-- VectorSpace: the parent class of the subspace/ideal hierarchy and of Lie homology
+TEST///
+L = lieAlgebra{a,b}
+assert(instance(lieIdeal{a}, VectorSpace))
+assert(instance(lieHomology L, VectorSpace))
+///
