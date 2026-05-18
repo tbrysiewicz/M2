@@ -169,3 +169,24 @@ TEST///
 L = lieAlgebra{a,b,c}
 assert(normalForm(a@b@c++3@a@c@b++2@c@b@a/2@b@c@a) === 0_L)
 ///
+
+-- holonomyLocal: a local Lie algebra of a holonomy Lie algebra is free (here on 2 generators)
+TEST///
+L = holonomy({{a2,a3},{a4,a5}},{{a2,a4,a6}})
+free2 = dims(1,6,lieAlgebra{x,y})
+assert(dims(1,6,holonomyLocal(0,L)) === free2)
+assert(dims(1,6,holonomyLocal(1,L)) === free2)
+hl2 = dims(1,6,holonomyLocal(2,L))
+assert(hl2#0 === 3)
+assert(drop(hl2,1) === drop(free2,1))
+///
+
+-- decompose: the ideal that vanishes exactly when a holonomy Lie algebra is the direct sum of its local algebras
+TEST///
+L1 = holonomy({{a2,a3},{a4,a5}},{{a2,a4,a6}})
+assert(dims(1,4,decompose L1) === {0,0,0,0})
+Q = holonomy({{a1,a2,a3},{a1,a4,a5},{a2,a4,a6},{a3,a5,a6}})
+dQ = decompose Q
+assert(dims(1,5,dQ) === {0,0,2,9,30})
+assert(#basis(3,dQ) === 2)
+///
