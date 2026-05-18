@@ -97,7 +97,7 @@ ideal "xz, y2, yu, z2, zu, u2",
 ideal "xy, xz, y2, yu, z2, zu",
 ideal "x2, xy, xz,y2, yz, z2",
 ideal "x2, xz, xu, xy-zu, yz, z2",
-ideal "x2, xy, xz xu, y2, yz",
+ideal "x2, xy, xz, xu, y2, yz",
 ideal "x2, y2, z2, u2, xy, zu, yz+xu",
 ideal "x2-y2, xy, yz, zu, z2, xz+yu, xu",
 ideal "x2, y2, z2, u2, zu, yu, xu",
@@ -409,7 +409,9 @@ TEST///
 ///
 
 -- roosTable: a HashTable of all 83 of Roos' quadratic-ideal examples, keyed
--- 1..83, every value an ideal of the common ring QQ[x,y,z,u].
+-- 1..83, every value a degree-2-generated ideal of the common ring QQ[x,y,z,u].
+-- The final assert is a regression guard against missing-comma typos in the
+-- source (a stray space turns two quadrics into one higher-degree generator).
 TEST///
 H = roosTable
 assert(instance(H, HashTable))
@@ -418,6 +420,7 @@ assert(sort keys H == toList(1..83))
 assert(all(values H, I -> instance(I, Ideal)))
 assert(#unique apply(values H, ring) == 1)
 assert(numgens ring H#1 == 4)
+assert(all(values H, I -> numgens I == 0 or max flatten degrees I <= 2))
 ///
 
 -- higherDepthTable: the subtable of roosTable at the positive-depth indices.
@@ -433,16 +436,13 @@ assert(all(values H, I -> depth((ring I)/I) > 0))
 
 -- depthZeroTable: the subtable of roosTable at the depth-zero indices;
 -- together with higherDepthTable it partitions the 83 keys.
--- Every entry has depth zero EXCEPT key 70: roosTable#70 is entered in the
--- source as `ideal "x2, xy, xz xu, y2, yz"`, and the missing comma in
--- `xz xu` produces the degree-4 generator x^2*z*u -- so roosTable#70 is not
--- quadratic and has depth 1. Key 70 is excluded below pending a source fix.
+-- Property test: every entry has depth zero, and each entry matches roosTable.
 TEST///
 H = depthZeroTable
 assert(instance(H, HashTable))
 assert(#H == 68)
 assert(all(keys H, i -> H#i === roosTable#i))
-assert(all(select(keys H, i -> i != 70), i -> depth((ring H#i)/(H#i)) == 0))
+assert(all(keys H, i -> depth((ring H#i)/(H#i)) == 0))
 assert(sort(keys higherDepthTable | keys depthZeroTable) == toList(1..83))
 assert(#(set keys higherDepthTable * set keys depthZeroTable) == 0)
 ///
