@@ -706,6 +706,22 @@ assert(csC_1 == 1)
 assert((csC_0)#(1,1) == -2 and (csC_0)#(1,2) == -1)
 ///
 
+-- standardZ2Tableaux generates the standard Z/2-graded tableaux indexing the Schur-complex
+-- basis: a single box gives m+n of them; in general their count equals the total rank of
+-- schurComplex, and each one is a fixed point of straightenTableau.
+TEST ///
+debug SchurComplexes
+assert(#standardZ2Tableaux(new Partition from {1},2,3) == 5)
+assert(#standardZ2Tableaux(new Partition from {1},3,4) == 7)
+R = QQ[x11,x21,x12,x22,x13,x23,x14,x24]
+F = complex {genericMatrix(R,x11,2,4)}
+G = schurComplex({3}, F)
+assert(#standardZ2Tableaux(new Partition from {3}, rank F_1, rank F_0) == sum for i from min G to max G list rank G_i)
+tabs = standardZ2Tableaux(new Partition from {2,1}, 2, 2)
+assert(#tabs == 20)
+assert(all(tabs, T -> straightenTableau(T, {2,1}) === new HashTable from {T => 1}))
+///
+
 end;
 
 
