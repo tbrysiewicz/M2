@@ -910,16 +910,19 @@ doc ///
 			3*s
 ///
 
+-- formalGroupPoint tests
 TEST ///
 	ZZ[x,y];
 	f = FGL(series(x+y+x*y,10));
 	ZZ[u];
 	s = formalGroupPoint(f,series(u^2+u,5));
 	t = formalGroupPoint(f,series(u^3,5));
-	assert(s+t===formalGroupPoint(f,series(u^5+u^4+u^3+u^2+u,5)));
-	assert(s-t===formalGroupPoint(f,series(-u^5-u^4-u^3+u^2+u,5)));
-	assert(-s===formalGroupPoint(f,series(-u^4+u^3-u,5)));
-	assert((-3)*s===formalGroupPoint(f,series(9*u^5-9*u^4+2*u^3+3*u^2-3*u,5)))
+	assert(instance(s, FormalGroupPoint))
+	assert(instance(t, FormalGroupPoint))
+	assert(s+t === formalGroupPoint(f,series(u^5+u^4+u^3+u^2+u,5)));
+	assert(s-t === formalGroupPoint(f,series(-u^5-u^4-u^3+u^2+u,5)));
+	assert(-s === formalGroupPoint(f,series(-u^4+u^3-u,5)));
+	assert((-3)*s === formalGroupPoint(f,series(9*u^5-9*u^4+2*u^3+3*u^2-3*u,5)))
 ///
 
 doc ///
@@ -1003,8 +1006,9 @@ doc ///
 		Variables with names equal to the strings (like x, y or b, here) should not have been assigned values (like 3) beforehand otherwise an error will occur.
 ///
 
+-- tests for universalFGLQ
 TEST ///
-	assert(universalFGLQ(3,"b","x","y")==FGL(series((4*b_1^2  - 3*b_2 )*x^2*y + (4*b_1^2  - 3*b_2 )*x*y^2  - 2*b_1 *x*y + x + y, 3)))
+	assert(universalFGLQ(3,"b","x","y") == FGL(series((4*b_1^2  - 3*b_2 )*x^2*y + (4*b_1^2  - 3*b_2 )*x*y^2  - 2*b_1 *x*y + x + y, 3)))
 ///
 
 --document {
