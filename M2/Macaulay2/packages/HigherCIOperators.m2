@@ -234,6 +234,18 @@ assert(betti TK == betti KC)
 assert(TK.dd_2 != KC.dd_2)
 ///
 
+-- exteriorMultiplication: the multiplication maps are associative --
+-- mu{p1+p2,p3} o (mu{p1,p2} ** mu{p3,0}) == mu{p1,p2+p3} o (mu{0,p1} ** mu{p2,p3}).
+-- This revives the package's checkAssociativity oracle as an assertion.
+TEST///
+n = 5
+mu = exteriorMultiplication n
+scan(toList(0..n), p1 ->
+  scan(toList(0..n-p1), p2 ->
+    scan(toList(0..n-p1-p2), p3 ->
+      assert(mu#{p1+p2,p3}*(mu#{p1,p2}**mu#{p3,0}) == mu#{p1,p2+p3}*(mu#{0,p1}**mu#{p2,p3})))))
+///
+
 
 -----------------------------
 --------Documentation-----------
