@@ -1,6 +1,7 @@
 CommentReport = symbol CommentReport
+SpeedReport = symbol SpeedReport
 
-testAudit = method(Options => {CommentReport => false})
+testAudit = method(Options => {CommentReport => false, SpeedReport => false})
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -136,6 +137,14 @@ styleOfTests := inputs -> (
     else "interspersed"
 )
 
+testSourceLines := inputs -> (
+    files := unique apply(toList(0..#inputs-1), i -> (locate inputs#i)#0);
+    {"test sources:"} |
+    (if #files === 0
+     then {"    none"}
+     else apply(files, file -> "    - " | file))
+)
+
 containsAll := (code, names) -> all(names, name -> wordMatch(name, code))
 
 typeNamesInMethodString := meth -> (
@@ -158,19 +167,71 @@ isMethodTested := (meth, code) -> (
 
 commentLinesIn := code -> select(lines code, line -> match("^ *--", line) and not match("^ *-- test source:", line))
 
+headerCommentLinesBefore := testInput -> (
+    loc := locate testInput;
+    filename := loc#0;
+    startLine := loc#1;
+    if not fileExists filename then {}
+    else (
+        srcLines := lines get filename;
+        i := startLine - 2;
+        comments := {};
+        while i >= 0 and match("^ *--", srcLines#i) do (
+            comments = prepend(srcLines#i, comments);
+            i = i - 1;
+        );
+        comments
+    )
+)
+
+commentSectionLines := (label, comments) -> (
+    if #comments === 0 then {}
+    else {label | ":"} | apply(comments, c -> "    " | c)
+)
+
 commentReportLines := inputs -> (
     {"", "Comments:"} | flatten apply(toList(0..#inputs-1), i -> (
         code := inputs#i#"code";
-        comments := commentLinesIn code;
+        headerComments := headerCommentLinesBefore inputs#i;
+        inTestComments := commentLinesIn code;
 
-        if #comments > 0
-        then {"", "TEST " | toString i | " -- source: " | toString locate inputs#i, "-----------------------------"} | comments
+        if #headerComments > 0 or #inTestComments > 0
+        then {"", "TEST " | toString i | " -- source: " | toString locate inputs#i, "------------------------------------------------------------------------"} |
+            commentSectionLines("Header comments", headerComments) |
+            commentSectionLines("In-test comments", inTestComments)
         else {}
     ))
 )
 
 printCommentReport := inputs -> (
     scan(commentReportLines inputs, print);
+)
+
+--------------------------------------------------------------------------------
+-- Speed report
+--------------------------------------------------------------------------------
+
+timeString := seconds -> toString seconds | "s"
+
+speedReportLines := (pkg, inputs) -> (
+    timings := apply(toList(0..#inputs-1), i -> (
+        result := try (
+            t := elapsedTiming check(i, pkg);
+            {i, t#0, toString locate inputs#i, true}
+        ) else {i, null, toString locate inputs#i, false};
+        result
+    ));
+    successful := select(timings, row -> row#3);
+    totalTime := sum apply(successful, row -> row#1);
+
+    {"", "Speed Report:", ""} |
+    apply(timings, row -> (
+        if row#3
+        then "    - TEST " | toString(row#0) | ": " | timeString(row#1) | " (" | row#2 | ")"
+        else "    - TEST " | toString(row#0) | ": failed while timing (" | row#2 | ")"
+    )) |
+    {"", "    total timed tests: " | toString(#successful) | "/" | toString(#timings),
+     "    total time: " | timeString totalTime}
 )
 
 --------------------------------------------------------------------------------
@@ -206,7 +267,9 @@ testAudit Package := opts -> pkg -> (
         "exported: " | toString(#funcs) | " functions, " | toString(#types) | " types, " | toString(#others) | " other symbols",
         "n_tests: " | toString(#inputs),
         "style: " | styleOfTests inputs,
-        "",
+        ""} |
+        testSourceLines inputs |
+        {"",
         "Report:",
         ""
         } |
@@ -215,6 +278,7 @@ testAudit Package := opts -> pkg -> (
         auditListLines("untested methods", untestedMethods) |
         auditListLines("silenced tests", silencedTests) |
         auditListLines("FIXME/TODO markers", fixmeTodos) |
+        (if opts.SpeedReport then speedReportLines(pkg, inputs) else {}) |
         (if opts.CommentReport then commentReportLines inputs else {});
 
     report := demark(newline, reportLines);
