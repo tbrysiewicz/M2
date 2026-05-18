@@ -1643,7 +1643,7 @@ F = {random(2,Grass(0,2)),random(2,Grass(0,2)),random(3,Grass(0,2))}
 assert(det(D) == (resultant F) * (det D'))
 ///
 
---Testing Hurwitz form. As mentionned in the docs,
+--Testing Hurwitz form. As mentioned in the docs,
 --hurwitzForm(I) == tangentialChowForm(I,1)
 TEST ///
 Q = ideal random(2,Grass(0,4))
