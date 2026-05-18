@@ -200,6 +200,26 @@ assert(
     )
 ///
 
+-- ciOperatorResolution: AL is a homogeneous (nonminimal) S-free resolution of the same
+-- module as the minimal resolution G.  AL comes from a length-truncated resolution, so
+-- it is exact only in degrees 1..length(AL)-1 -- the top homology is the truncation.
+TEST///
+needsPackage "CompleteIntersectionResolutions"
+S = ZZ/101[a,b,c];
+ff = matrix"a4,b4,c4";
+N = coker matrix"a,b,c;b,c,a";
+R = S/ideal ff;
+M = highSyzygy (R**N);
+AA = res(M, LengthLimit => 5);
+A = complex apply(length AA, i-> lift(AA.dd_(i+1), S));
+L = trueKoszul ff;
+AL = ciOperatorResolution(A,L);
+G = res pushForward(map(R,S),M);
+assert(isHomogeneous AL)
+assert(all(toList(1..length AL - 1), i -> HH_i AL == 0))
+assert(prune HH_0 AL == prune HH_0 G)
+///
+
 
 -----------------------------
 --------Documentation-----------
