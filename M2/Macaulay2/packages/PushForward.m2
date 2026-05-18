@@ -938,6 +938,44 @@ needsPackage "PushForward"
   assert(M1 == M2)
 ///
 
+TEST /// -- NoPrune option: pushFwd skips the prune call when NoPrune => true
+  R5 = QQ[a..e]
+  R6 = QQ[a..f]
+  M = coker genericMatrix(R6, a, 2, 3)
+  G = map(R6, R5, {a+b+c+d+e+f, b, c, d, e})
+  notpruned = pushFwd(G, M, NoPrune => true)
+  pruned    = pushFwd(G, M)
+  -- NoPrune => true changes the result: the presentation is left un-pruned
+  assert(notpruned != pruned)
+  -- ... and pruning it recovers the default (pruned) module
+  assert(prune notpruned == pruned)
+///
+
+TEST /// -- pushFwd errors on a ring map that is not module-finite
+  -- general (non-inclusion) case: QQ[v,w] is not finite over QQ[u] via u -> v+w
+  Ae = QQ[u]
+  Be = QQ[v,w]
+  fe = map(Be, Ae, {v+w})
+  assert not isModuleFinite fe
+  assert(try (pushFwd fe; false) else true)
+  -- coefficient-ring inclusion: QQ[v,w] is not finite over QQ
+  assert not isModuleFinite Be
+  assert(try (pushFwd Be; false) else true)
+///
+
+TEST /// -- regression: kernel of a ring-map-linear matrix
+  -- the kernel of a phi-linear map is the computation underlying pushFwd's
+  -- makeModule; this pins the polynomial-base case of an Eisenbud-Stillman
+  -- example (the fraction-field analogue is a known, separate bug)
+  kk = ZZ/101
+  A = kk[s,t]
+  C = A[x,y,z]/(x^2, y^2, z^2)
+  phi = map(C, A)
+  f = map(C^1, A^4, phi, {{x, s*y, t*y, z}})
+  K = ker f
+  assert(K == image map(A^4, A^{{-1}}, {{0}, {t}, {-s}, {0}}))
+///
+
 end--
 
 restart
