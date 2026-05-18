@@ -512,7 +512,7 @@ minimalReduction Ideal := Ideal => o -> i -> (
 	  Strategy => o.Strategy
 	  )
       then  return J);
-     <<o.Tries <<" iterations were not enough to randomly find a minimal reduction"; endl;
+     <<o.Tries <<" iterations were not enough to randomly find a minimal reduction"<< endl;
      error("not random enough")
           )
 
@@ -543,7 +543,7 @@ whichGm Ideal := i -> (
      --
      f:=presentation module i;
      S:=ring f;
-     if f==0 then "infinity" else(
+     if f==0 then infinity else(
      q:=rank target f;
      maxSource := (max degrees source f)_0;
      minTarget := (min degrees target f)_0;
@@ -557,7 +557,7 @@ whichGm Ideal := i -> (
           while m<d+1 and codim j > m do (
 	       m=m+1;
 	       j=j+randomMinor(f, q-m));
-     if m<=d then m else "infinity"))
+     if m<=d then m else infinity))
  
 ------------------------------------------------------------------
  
@@ -852,21 +852,6 @@ doc ///
    expectedReesIdeal
 ///
 
-///
-  Description
-    Text
-      When searching for a minimal reduction of an ideal over a field with
-      a small number of elements, random choices of generators are often
-      not good enough. This option controls how many times the routine
-      will try new random choices before giving up and reporting an error.
-    Example
-      setRandomSeed(314159268)
-      kk=ZZ/2
-      S = kk[a,b,c,d];
-      I = monomialCurveIdeal(S, {1,3,4});
-      minimalReduction(I, Tries=>30);
-///
-      
 doc ///
   Key
     [minimalReduction, Tries]
@@ -1745,7 +1730,7 @@ doc ///
     I:Ideal
   Outputs
     :ZZ
-      what it does
+      the largest $m$ such that $I$ satisfies the condition $G_m$, or @TO infinity@
   Description
     Text
       An ideal $I$ in a ring $S$ is said to satisfy the condition $G_m$ if, for every prime ideal $P$ of
@@ -2592,6 +2577,8 @@ S=kk[a..c];
 m=ideal vars S
 i=(ideal"a,b")*m+ideal"c3"
 assert(whichGm i==3)
+-- a principal ideal satisfies G_m for every m, so whichGm returns infinity
+assert(whichGm ideal a === infinity)
 ///
 
 TEST///
