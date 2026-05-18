@@ -137,3 +137,27 @@ A = quotient(J,lieSubAlgebra{a c})
 assert(dims(1,3,A) === {2,3,5})
 assert(member((c b) (a c),J))
 ///
+
+TEST///
+R = QQ[x]
+L = koszulDual R
+assert(dims(1,6,L) === {1,0,0,0,0,0})
+E = extAlgebra(4,L)
+assert(#gens E === 4)
+assert(dims(4,E) == matrix{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}})
+assert(weight(ext_0 ext_0 ext_0 ext_0) === {4,4})
+///
+
+TEST///
+R = QQ[x,y,z,u]
+I = {x^2,y^2,z^2,u^2,x*y+z*u}
+S = R/I
+L = koszulDual S
+E = extAlgebra(4,L)
+assert(dims(4,E) == matrix{{4,0,0,0},{0,5,0,0},{0,0,0,5},{0,0,0,0}})
+///
+
+TEST///
+L = lieAlgebra{a,b,c}
+assert(normalForm(a@b@c++3@a@c@b++2@c@b@a/2@b@c@a) === 0_L)
+///
