@@ -593,9 +593,9 @@ doc ///
 
 -- tests for series arithmetic and inverse
 TEST ///
-	R=ZZ[x,y];
-	s = series(x^2+x+y,2);
-	t = series(x+y+1,2);
+	R=ZZ[x,y]
+	s = series(x^2+x+y,2)
+	t = series(x+y+1,2)
 	zeroseries = series(0_R, 2)
 	add = s + t
 	negate = -s
@@ -607,7 +607,6 @@ TEST ///
 	assert(instance(subtract, FormalSeries))
 	assert(instance(scale, FormalSeries))
 	assert(instance(pow, FormalSeries))
-	assert(instance(
 	assert(add == series(x^2+2*x+2*y+1,2))
 	assert(negate == series(-x^2-x-y,2))
 	assert(subtract == series(-x^2+1,2))
