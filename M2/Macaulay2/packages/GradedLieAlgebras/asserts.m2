@@ -190,3 +190,23 @@ dQ = decompose Q
 assert(dims(1,5,dQ) === {0,0,2,9,30})
 assert(#basis(3,dQ) === 2)
 ///
+
+-- map(LieAlgebra,LieAlgebra,List) and isIsomorphism: a generator permutation gives an
+-- automorphism of the quadrangle holonomy algebra for (231645) but not for (231564)
+TEST///
+Q = holonomy({{a1,a2,a3},{a1,a4,a5},{a2,a4,a6},{a3,a5,a6}})
+assert(isIsomorphism map(Q,Q,{a2,a3,a1,a6,a4,a5}))
+assert(not isIsomorphism map(Q,Q,{a2,a3,a1,a5,a6,a4}))
+///
+
+-- zeroMap (the zero homomorphism) and zeroDerivation (the zero derivation)
+TEST///
+L = lieAlgebra{a,b}
+M = lieAlgebra{a,b}
+zm = zeroMap(M,L)
+assert(zm === map(M,L,{0_M,0_M}))
+assert(isWellDefined(2,zm))
+use L
+assert(zm a === 0_M)
+assert(differential L === zeroDerivation L)
+///
