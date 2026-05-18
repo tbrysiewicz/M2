@@ -220,6 +220,20 @@ assert(all(toList(1..length AL - 1), i -> HH_i AL == 0))
 assert(prune HH_0 AL == prune HH_0 G)
 ///
 
+-- trueKoszul: produces the Koszul complex of ff (resolving S/ideal ff) with the same
+-- Betti table as koszulComplex but the exterior-algebra (lex) basis order
+TEST///
+S = ZZ/101[a,b,c,d]
+ff = matrix{{a,b,c,d}}
+TK = trueKoszul ff
+KC = koszulComplex ff
+assert(isHomogeneous TK)
+assert(all(toList(1..length TK), i -> HH_i TK == 0))
+assert(prune HH_0 TK == prune coker ff)
+assert(betti TK == betti KC)
+assert(TK.dd_2 != KC.dd_2)
+///
+
 
 -----------------------------
 --------Documentation-----------
