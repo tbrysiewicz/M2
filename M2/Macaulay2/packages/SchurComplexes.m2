@@ -743,6 +743,37 @@ assert(s === new HashTable from {new HashTable from {(1,1)=>1,(2,1)=>2} => 1})
 assert(s === straightenTableau(Tns, new Partition from {2}))
 ///
 
+-- permutedTableau rewrites two adjacent tableau columns from a value list L via a pair of
+-- index subsets; entries of column col1 above the cutoff row1 are left untouched
+TEST ///
+debug SchurComplexes
+T = new HashTable from {(1,1)=>10,(1,2)=>11,(2,1)=>20,(2,2)=>21}
+assert(permutedTableau(T, ({0,2},{1,3}), 1, 2, 1, 2, {100,200,300,400}) === new HashTable from {(1,1)=>100,(1,2)=>300,(2,1)=>200,(2,2)=>400})
+assert(permutedTableau(T, ({0},{1,2}), 2, 2, 1, 2, {100,200,300,400}) === new HashTable from {(1,1)=>10,(1,2)=>100,(2,1)=>200,(2,2)=>300})
+///
+
+-- shuffle' performs one step of the straightening law at a column violation, returning the
+-- shuffling relation as a linear combination.  The exact output is pinned for a small case,
+-- and straightening the combination is checked to recover straightening the input tableau.
+TEST ///
+debug SchurComplexes
+straightenCombo = (H, lam) -> (
+    res := new MutableHashTable from {};
+    for k in keys H do (
+        s := straightenTableau(k, lam);
+        for sk in keys s do (
+            c := (H#k)*(s#sk);
+            if res#?sk then res#sk = res#sk + c else res#sk = c));
+    new HashTable from select(pairs res, p -> p#1 != 0));
+Ta = new HashTable from {(1,1)=>2,(2,1)=>1}
+sa = shuffle'(Ta, (1,1), 0, new Partition from {1,1})
+assert(sa === new HashTable from {Ta => 0, new HashTable from {(1,1)=>1,(2,1)=>2} => 1})
+assert(straightenCombo(sa, {2}) === straightenTableau(Ta, {2}))
+Tb = new HashTable from {(1,1)=>2,(1,2)=>4,(2,1)=>1,(2,2)=>3}
+sb = shuffle'(Tb, (1,1), 0, new Partition from {2,2})
+assert(straightenCombo(sb, {2,2}) === straightenTableau(Tb, {2,2}))
+///
+
 end;
 
 
