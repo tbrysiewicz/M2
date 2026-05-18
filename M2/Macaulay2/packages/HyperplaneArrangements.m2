@@ -29,7 +29,7 @@ newPackage(
 
 export {
     "arrangementLibrary", 
-    -- type
+    -- types
     "Arrangement", 
     "CentralArrangement",
     "Flat",     
@@ -3628,10 +3628,8 @@ assert(0 == matrix trivial)
 assert(0 == coefficients trivial)
 assert(deletion(nontrivial,x) == trivial)
 assert(trivial++trivial != trivial)
+assert(instance(trivial++trivial, Arrangement))
 assert(trivial**QQ != trivial)
-nontrivialplustrivial = arrangementSum(nontrivial, trivial)
-assert(instance(nontrivialplustrivial, CentralArrangement))
-assert(numgens ring nontrivialplustrivial == 6)
 ///
 
 
@@ -3743,11 +3741,11 @@ assert(flats (0, empty) === {flat(empty, {})})
 R = QQ[x,y]
 affine = arrangement({x,x+1,y}, R)
 assert(flats(2, affine) === {flat(affine, {0,2}), flat(affine, {1,2})})
--- Test `closure` and comparison of Flats (moved to documentation)
---F' = closure(A3, ideal (hyperplanes A3)_{0,1})		    -- closure(Arrangement, Ideal)
---assert(F == F')
---F' = closure(A3, {0,1})					    -- closure(Arrangement, List)
---assert(F == F')
+-- Test `closure` and comparison of Flats
+F' = closure(A3, ideal (hyperplanes A3)_{0,1})		    -- closure(Arrangement, Ideal)
+assert(F == F')
+F' = closure(A3, {0,1})					    -- closure(Arrangement, List)
+assert(F == F')
 ///
 
 ---------------------------
@@ -3878,13 +3876,21 @@ assert(dual(coloop, R') === loop)			    -- dual of a coloop
 ---------------------------
 -- euler
 ---------------------------
--- In documentation
+TEST ///
+assert(euler typeA (5) === 24)
+assert(euler typeB (3) === 8)
+///
 
 ---------------------------
 -- eulerRestriction
 ---------------------------
-
--- in documentation
+TEST ///
+A = arrangement "bracelet"
+(B,m) = eulerRestriction(A,{1,1,1,1,1,1,1,1,1,1},0)
+assert(isFreeModule prune image der B)
+C = restriction(A,0)
+assert(not isFreeModule prune image der C)
+///
 
 ---------------------------
 -- genericArrangement
