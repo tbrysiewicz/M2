@@ -464,6 +464,97 @@ TEST ///
   elapsedTime assert({2, 2, 2, 2} == rank \ summands M2) -- ~12s
 ///
 
+TEST /// -- isDirectSummand / isSummand: detecting direct summands
+  S = ZZ/3[x,y,z]
+  M = S^{0,-1,-2}
+  -- free L: twists occurring among the generators of M are summands
+  assert isDirectSummand(S^{-1}, M)
+  assert isDirectSummand(S^{0,-2}, M)
+  -- isSummand is an exported synonym
+  assert(isSummand === isDirectSummand)
+  assert isSummand(S^{-1}, M)
+  -- free L: a twist not occurring in M is not a summand
+  assert not isDirectSummand(S^{1}, M)
+  -- boundary: rank L > rank M is immediately false
+  assert not isDirectSummand(S^4, M)
+  -- boundary: equal ranks reduce to an isomorphism test
+  assert isDirectSummand(M, M)
+  assert not isDirectSummand(S^3, M)
+  -- non-free L: a genuine summand of N ++ N is found
+  N = module ideal(x,y,z)
+  assert not isFreeModule N
+  assert isDirectSummand(N, N ++ N)
+  -- non-free L: an unrelated module is not a summand
+  assert not isDirectSummand(module ideal(x,y), N ++ N)
+  -- error: the two modules must be defined over the same ring
+  S2 = ZZ/5[a,b,c]
+  assert(try (isDirectSummand(S2^1, M); false) else true)
+///
+
+TEST /// -- findProjectors: graded projectors that split a module
+  debug needsPackage "DirectSummands"
+  R = ZZ/7[x,y,z]
+  M = coker matrix"x,y,z;y,z,x;z,x,y"
+  P = findProjectors M
+  -- type: a nonempty list of endomorphisms of M
+  assert instance(P, List)
+  assert(0 < #P)
+  assert all(P, g -> instance(g, Matrix))
+  assert all(P, g -> source g === M and target g === M)
+  -- property: each projector is a nonzero, non-injective endomorphism
+  assert all(P, g -> g != 0 and not isInjective g)
+  -- run: the projectors drive the decomposition into three summands
+  L = summandsFromProjectors(M, P)
+  assert(3 == #L)
+  assert isIsomorphic(directSum L, M)
+  -- error: findProjectors rejects a non-homogeneous module
+  Minhom = coker matrix{{x, y + 1}, {y, x}}
+  assert not isHomogeneous Minhom
+  assert(try (findProjectors Minhom; false) else true)
+  -- error: an indecomposable module (here R^1) yields no projectors
+  assert(try (findProjectors R^1; false) else true)
+///
+
+TEST /// -- findIdempotents / findIdem: idempotents that split a module
+  debug needsPackage "DirectSummands"
+  R = ZZ/7[x,y,z]
+  M = coker matrix"x,y,z;y,z,x;z,x,y"
+  I = findIdempotents M
+  -- type: a nonempty list of endomorphisms of M
+  assert instance(I, List)
+  assert(0 < #I)
+  assert all(I, h -> instance(h, Matrix))
+  assert all(I, h -> source h === M and target h === M)
+  -- property: each returned endomorphism is (weakly) idempotent
+  assert all(I, isWeakIdempotent)
+  -- run: the idempotents drive the decomposition into three summands
+  L = summandsFromIdempotents(M, I)
+  assert(3 == #L)
+  assert isIsomorphic(directSum L, M)
+  -- findIdem is an exported synonym for findIdempotents
+  assert(findIdem === findIdempotents)
+  -- error: an indecomposable module (here R^1) yields no idempotents
+  assert(try (findIdempotents R^1; false) else true)
+///
+
+TEST /// -- frobeniusPullback: pullback along the Frobenius
+  -- over a prime field the Frobenius twist of the ring is the ring itself
+  R = ZZ/3[x]
+  -- a free module pulls back to a free module, scaling degrees by p^e
+  assert(frobeniusPullback(1, R^1)    == R^1)
+  assert(frobeniusPullback(1, R^{-1}) == R^{-3})
+  -- the 0-th Frobenius pullback is the identity
+  assert(frobeniusPullback(0, R^{-1}) == R^{-1})
+  -- on a cokernel, the presentation entries are raised to the p^e power
+  assert(frobeniusPullback(1, coker matrix{{x}}) == coker matrix{{x^3}})
+  assert(frobeniusPullback(2, coker matrix{{x}}) == coker matrix{{x^9}})
+  -- the matrix version raises every entry to the p^e power
+  assert(frobeniusPullback(1, vars R) == map(R^1, R^{-3}, {{x^3}}))
+  -- the Ring and Ideal inputs reduce to the module case
+  assert(frobeniusPullback(1, R) == R^1)
+  assert instance(frobeniusPullback(1, ideal x), Module)
+///
+
 load "./large-tests.m2"
 
 end--
