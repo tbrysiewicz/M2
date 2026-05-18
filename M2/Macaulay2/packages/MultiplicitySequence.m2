@@ -729,6 +729,127 @@ assert(pairs multiplicitySequence ideal "x,y2" == {(2,2)})
 assert(pairs multiplicitySequence (m*I) == {(2,1)})
 ///
 
+--------------------------------------------------------------------------------------------
+-- Tests added in the 2026 test-audit pass: coverage for exported functions
+-- that previously had no (or only incidental) test coverage.
+--------------------------------------------------------------------------------------------
+
+-- grGr: the bigraded ring Gr_m(Gr_I(R)); the result is cached on the ideal.
+TEST ///
+R = QQ[x,y];
+I = ideal"x2,xy";
+A = grGr I;
+assert(instance(A, Ring))
+-- grGr is bigraded
+assert(degreeLength A == 2)
+assert(unique degrees A == {{1,0},{0,1}})
+-- the result is cached on the ideal
+assert(grGr I === A)
+///
+
+-- hilbertSequence: the coefficients of the p-th sum transform of the
+-- multigraded Hilbert function, returned as a hash table.
+TEST ///
+R = QQ[a..e];
+I = monomialIdeal "de,abe,ace,abcd";
+assert(hilbertSequence I === hashTable {({1},2), ({2},-6), ({3},5)})
+-- the ideal form is the Hilbert sequence of the comodule
+assert(hilbertSequence I === hilbertSequence comodule I)
+-- a genuinely multigraded example
+S = QQ[a..e, DegreeRank => 5];
+assert(# pairs hilbertSequence monomialIdeal "de,abe,ace,abcd" == 16)
+///
+
+-- printHilbertSequence: lays out a Hilbert sequence as a Net table.
+TEST ///
+R = QQ[x_1..x_9];
+I = minors(2, genericMatrix(R, 3, 3));
+assert(instance(printHilbertSequence hilbertSequence grGr I, Net))
+///
+
+-- getGenElts: a list of general elements of an ideal, one cutting the
+-- codimension down at each step.  (Random; setRandomSeed makes it reproducible.)
+TEST ///
+setRandomSeed 0;
+R = QQ[x,y,z];
+I = ideal"xy,yz,zx";
+G = getGenElts(I, 2);
+assert(#G == 2)
+-- each general element belongs to I
+assert(all(G, c -> c % I == 0))
+assert(#getGenElts(I, 3) == 3)
+assert(#getGenElts(I, 2, minTerms => 2) == 2)
+///
+
+-- the "grGr" (Hilbert series) and "genElts" (general elements) strategies of
+-- multiplicitySequence compute the same sequence.
+TEST ///
+setRandomSeed 0;
+R = QQ[x,y,z];
+I = ideal"x4z,y3z";
+assert(multiplicitySequence(I, Strategy => "grGr") === multiplicitySequence(I, Strategy => "genElts"))
+assert(multiplicitySequence(I, Strategy => "genElts") === hashTable {(1,1),(2,15)})
+///
+
+-- the DoSaturate, minTerms and numCandidates options of multiplicitySequence
+-- are accepted and yield the correct sequence.
+TEST ///
+setRandomSeed 0;
+R = QQ[x,y,z];
+I = ideal"x4z,y3z";
+expected = hashTable {(1,1),(2,15)};
+assert(multiplicitySequence(I, DoSaturate => true) === expected)
+assert(multiplicitySequence(I, Strategy => "genElts", minTerms => 1) === expected)
+assert(multiplicitySequence(I, Strategy => "genElts", numCandidates => 5) === expected)
+///
+
+-- multiplicitySequence does not require the ambient ring to be a polynomial
+-- ring.
+TEST ///
+S = QQ[a..d];
+J = ideal(a*d - b*c, c^2 - b*d);
+R = S/J;
+I = ideal(R_0^2, R_0*R_1, R_1^3);
+assert(multiplicitySequence I === hashTable {(1,5),(2,7)})
+///
+
+-- multiplicitySequence(j, I) extracts the j-th term of the sequence; indices
+-- below the codimension or above the analytic spread return 0.
+TEST ///
+R = QQ[x,y,z];
+I = ideal"xy2,yz3,zx4";
+assert(multiplicitySequence(2, I) == 9)
+assert(multiplicitySequence(3, I) == 25)
+assert(multiplicitySequence(1, I) == 0)
+assert(multiplicitySequence(4, I) == 0)
+///
+
+-- monReduction: the minimal monomial reduction of a monomial ideal.  Only the
+-- Newton-polyhedron vertices survive, so a non-vertex generator is dropped.
+TEST ///
+R = QQ[x,y];
+I = ideal"x3,x2y,xy2,y3";
+J = monReduction I;
+assert(instance(J, MonomialIdeal))
+-- the interior generators x2y, xy2 are dropped
+assert(J == monomialIdeal"x3,y3")
+assert(J != monomialIdeal I)
+-- an ideal that equals its own monomial reduction is a fixed point
+assert(monReduction ideal"x2,xy,y3" == monomialIdeal"x2,xy,y3")
+///
+
+-- NP: the Newton polyhedron of a monomial ideal; it is unchanged by passing
+-- to the integral closure of the ideal.
+TEST ///
+R = QQ[x,y,z];
+I = ideal"x2,y3,yz";
+P = NP I;
+assert(instance(P, Polyhedron))
+assert(fVector P == {3,7,5,1})
+assert(P == NP integralClosure(I, 1))
+///
+
+
 end--
 
 restart
