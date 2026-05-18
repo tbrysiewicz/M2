@@ -722,6 +722,27 @@ assert(#tabs == 20)
 assert(all(tabs, T -> straightenTableau(T, {2,1}) === new HashTable from {T => 1}))
 ///
 
+-- tableauxDiff builds the Schur-complex differential; isWellDefined confirms d^2 = 0,
+-- a stronger check than the isHomogeneous assertions in the existing tests
+TEST ///
+R = ZZ[x,y]
+assert isWellDefined schurComplex({1,1}, freeResolution ideal(x,y))
+R = ZZ/7[x,y,z,w]
+assert isWellDefined schurComplex({2,1}, freeResolution ideal(x*z-y^2,x*w-y*z,y*w-z^2))
+///
+
+-- straightenTableau / recursiveStraighten is a projection onto the standard-tableau basis:
+-- a column with a repeated positive (even) entry straightens to zero, and the partition
+-- argument may be given as a List or a Partition with identical results
+TEST ///
+debug SchurComplexes
+assert(straightenTableau(new HashTable from {(1,1)=>1,(1,2)=>1}, {1,1}) === new HashTable from {})
+Tns = new HashTable from {(1,1)=>2,(2,1)=>1}
+s = straightenTableau(Tns,{2})
+assert(s === new HashTable from {new HashTable from {(1,1)=>1,(2,1)=>2} => 1})
+assert(s === straightenTableau(Tns, new Partition from {2}))
+///
+
 end;
 
 
