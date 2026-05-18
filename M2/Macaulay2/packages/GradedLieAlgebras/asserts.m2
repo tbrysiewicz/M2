@@ -251,3 +251,37 @@ L = lieAlgebra{a,b}
 assert(instance(lieIdeal{a}, VectorSpace))
 assert(instance(lieHomology L, VectorSpace))
 ///
+
+-- Signs option: an even generator has [a,a]=0, an odd one (Signs=>1) has [a,a]=!=0
+TEST///
+Leven = lieAlgebra{a}
+assert(a a === 0_Leven)
+assert(dims(1,3,Leven) === {1,0,0})
+Lodd = lieAlgebra({a},Signs=>1)
+assert(a a =!= 0_Lodd)
+assert(dims(1,3,Lodd) === {1,1,0})
+///
+
+-- Weights option: a generator of weight w first appears in degree w, changing the dimensions
+TEST///
+dw = dims(1,4,lieAlgebra({a,b},Weights=>{1,2}))
+du = dims(1,4,lieAlgebra{a,b})
+assert(dw === {1,1,1,1})
+assert(du === {2,1,2,3})
+assert(dw =!= du)
+///
+
+-- Field option: the relation 3[a,b] is nontrivial over QQ but vacuous over ZZ/3
+TEST///
+Lq = lieAlgebra{a,b}/{3 a b}
+Lf = lieAlgebra({a,b},Field=>ZZ/3)/{3 a b}
+assert(dims(1,3,Lq) === {2,0,0})
+assert(dims(1,3,Lf) === {2,1,2})
+///
+
+-- characteristic 2: the axiom [a,a]=0 holds even for an odd (Signs=>1) generator
+TEST///
+L = lieAlgebra({a},Field=>ZZ/2,Signs=>1)
+assert(a a === 0_L)
+assert(dims(1,4,L) === {1,0,0,0})
+///
