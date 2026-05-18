@@ -1742,7 +1742,6 @@ beginDocumentation()
 
 load "./Chordal/ChordalDoc.m2";
 
-TEST ///
+
 load (Chordal#"source directory" | "./Chordal/test_chordal.m2")
-///
 
