@@ -668,6 +668,44 @@ TEST ///
     assert(S===Output)
 ///
 
+-- internal tableau utilities: lengthrow/lengthcolumn (row/column lengths), homologicalDegree
+-- and tableauInternalDegree (degree sums over a tableau's entries), and scalarMultiply
+TEST ///
+debug SchurComplexes
+T = new HashTable from {(1,1)=>1,(2,1)=>1,(3,1)=>1,(1,2)=>1,(2,2)=>1}
+assert(lengthrow(T,1) == 3)
+assert(lengthrow(T,2) == 2)
+assert(lengthcolumn(T,1) == 2)
+assert(lengthcolumn(T,3) == 1)
+T2 = new HashTable from {(1,1)=>1,(1,2)=>-1,(2,1)=>2}
+assert(homologicalDegree(T2,{(0,1),(4,1)},{(3,1)}) == 7)
+assert(tableauInternalDegree(T2,{10,20},{30}) == 60)
+assert(scalarMultiply(3, new HashTable from {1=>2,2=>5}) === new HashTable from {1=>6,2=>15})
+///
+
+-- sgn: the Z/2-graded sign of a permutation -- ordinary inversion sign, except a
+-- transposition of two odd (negative) entries contributes +1, not -1
+TEST ///
+debug SchurComplexes
+assert(sgn({1,2},{0,1}) == 1)
+assert(sgn({1,2},{1,0}) == -1)
+assert(sgn({-1,-2},{1,0}) == 1)
+assert(sgn({1,2,3},{2,1,0}) == -1)
+///
+
+-- columnStandardize sorts a tableau column with the Z/2 sign rule: an even-even swap
+-- flips the sign, a repeated positive entry forces sign 0, odd entries never flip the sign
+TEST ///
+debug SchurComplexes
+csA = columnStandardize(new HashTable from {(1,1)=>2,(1,2)=>1},1,2)
+assert(csA_1 == -1)
+assert((csA_0)#(1,1) == 1 and (csA_0)#(1,2) == 2)
+assert((columnStandardize(new HashTable from {(1,1)=>1,(1,2)=>1},1,2))_1 == 0)
+csC = columnStandardize(new HashTable from {(1,1)=>-1,(1,2)=>-2},1,2)
+assert(csC_1 == 1)
+assert((csC_0)#(1,1) == -2 and (csC_0)#(1,2) == -1)
+///
+
 end;
 
 
