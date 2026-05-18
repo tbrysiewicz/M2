@@ -81,6 +81,7 @@ S=image f
 assert(dims(1,8,L/I)===dims(1,8,S))
 ///
 
+-- derivations of Anick's algebra <a,b>/(aaab,bbba): lieDerivation, innerDerivation, isWellDefined(LieDerivation)
 TEST///
 L = lieAlgebra{a,b}/{a a a b,b b b a}
 da61 = lieDerivation{a b a b a b a,0_L}
@@ -100,6 +101,7 @@ assert(da7 === innerDerivation(b b a b a b a))
 assert(db7 === innerDerivation(a b a b a b a))
 ///
 
+-- subspace constructors: lieSubAlgebra (closed under bracket) vs lieSubSpace (linear span)
 TEST///
 L = lieAlgebra{a,b,c}
 A = lieSubAlgebra{a,b c}
@@ -108,6 +110,7 @@ assert(dims(1,4,A) === {1,1,1,1})
 assert(dims(1,4,S) === {1,1,0,0})
 ///
 
+-- ideal sum (+) and intersection (@); property test: dim(I+J)+dim(I@J) = dim(I)+dim(J)
 TEST///
 L = lieAlgebra{a,b,c}
 I = lieIdeal{a b}
@@ -121,6 +124,7 @@ assert(dims(1,5,U) === {0,0,0,1,6})
 assert(dims(1,5,T) + dims(1,5,U) === dims(1,5,I) + dims(1,5,J))
 ///
 
+-- zeroIdeal: the zero ideal {0_L} (boundary case), built two ways
 TEST///
 L = lieAlgebra{a,b}
 Z = zeroIdeal L
@@ -128,6 +132,7 @@ assert(Z === lieIdeal{0_L,a a})
 assert(dims(1,5,Z) === {0,0,0,0,0})
 ///
 
+-- quotient(LieIdeal,FGLieSubAlgebra) and ideal membership
 TEST///
 L = lieAlgebra{a,b,c}
 I = lieIdeal{a a c+b a c-a b a,c c a-b b a}
@@ -138,6 +143,7 @@ assert(dims(1,3,A) === {2,3,5})
 assert(member((c b) (a c),J))
 ///
 
+-- koszulDual(QQ[x]) and the Koszul-duality round-trip: the Ext-algebra is the identity matrix
 TEST///
 R = QQ[x]
 L = koszulDual R
@@ -148,6 +154,7 @@ assert(dims(4,E) == matrix{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}})
 assert(weight(ext_0 ext_0 ext_0 ext_0) === {4,4})
 ///
 
+-- Lech's non-Koszul algebra: its Ext-algebra carries a tell-tale off-diagonal entry
 TEST///
 R = QQ[x,y,z,u]
 I = {x^2,y^2,z^2,u^2,x*y+z*u}
@@ -157,6 +164,7 @@ E = extAlgebra(4,L)
 assert(dims(4,E) == matrix{{4,0,0,0},{0,5,0,0},{0,0,0,5},{0,0,0,0}})
 ///
 
+-- normalForm of a formal-operator (@, ++, /) expression that reduces to 0
 TEST///
 L = lieAlgebra{a,b,c}
 assert(normalForm(a@b@c++3@a@c@b++2@c@b@a/2@b@c@a) === 0_L)
