@@ -215,18 +215,32 @@ pruneUnit(List, ZZ, Sequence, List) := opts -> (mComplex, n, unit, pruningMorph)
 -- TODO: handle the case of twisted complexes and free modules with degrees (both are OK in the engine)
 pruneDiff = method(Options => {PruningMap => true, UnitTest => isUnit})
 pruneDiff(Complex, ZZ) := opts -> (C, n) -> (
-    if opts.PruningMap === true then (
-        (D, pruningMorph) := pruneDiff(toMutableComplex C, n, opts);
-        return (toChainComplex D, pruningMorph);
-        );
-    toChainComplex pruneDiff(toMutableComplex C, n, opts)
+    m := min C;
+    -- The pruning morphism is computed internally regardless of the PruningMap
+    -- option, since it is needed to grade the result correctly; PruningMap
+    -- only controls whether it is also returned to the caller.
+    (D, pruningMorph) := pruneDiff(toMutableComplex C, n,
+        PruningMap => true, UnitTest => opts.UnitTest);
+    F := source map(target C.dd_(m+1), , matrix pruningMorph#0);
+    if opts.PruningMap === true then return (toChainComplex(D, F), pruningMorph);
+    toChainComplex(D, F)
     )
 pruneDiff(Complex, ZZ, List) := opts -> (C, n, M) -> (
+    m := min C;
+    -- The leftmost module changes only when the 0-th differential is pruned;
+    -- in that case the pruning morphism is needed to recover its grading.
     if opts.PruningMap === true then (
         (D, pruningMorph) := pruneDiff(toMutableComplex C, n, M, opts);
-        return (toChainComplex D, pruningMorph);
+        F := target C.dd_(m+1);
+        if n == 0 and pruningMorph#0 =!= null then
+          F = source map(F, , matrix pruningMorph#0);
+        return (toChainComplex(D, F), pruningMorph);
         );
-    toChainComplex pruneDiff(toMutableComplex C, n, M, opts)
+    (D', M') := pruneDiff(toMutableComplex C, n,
+        PruningMap => true, UnitTest => opts.UnitTest);
+    F' := target C.dd_(m+1);
+    if n == 0 then F' = source map(F', , matrix M'#0);
+    toChainComplex(D', F')
     )
 pruneDiff(List, ZZ)         := opts -> (mComplex, n) -> (
     pruningMorph := new MutableList;

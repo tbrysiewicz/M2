@@ -319,6 +319,47 @@ TEST ///
   assert(D'.dd^2 == 0)
 ///
 
+-- pruneDiff preserves the grading of its input -- including a degree twist --
+-- with either value of PruningMap.  Pruning the 0-th differential rebuilds the
+-- leftmost module, so its grading is recovered from the pruning morphism;
+-- pruning a later differential leaves the leftmost module untouched.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y,z]
+  -- a twisted minimal resolution: pruneDiff finds no units, so the complex is
+  -- returned unchanged and its Betti table -- twist included -- is preserved
+  Ct = (freeResolution coker matrix{{x^2,y^2,z^2}}) ** R^{-5}
+  for n to 2 do (
+    pdt := pruneDiff(Ct, n);
+    pdf := pruneDiff(Ct, n, PruningMap => false);
+    assert(class pdt === Sequence and class last pdt === List);
+    assert(class pdf === Complex);
+    Dt := first pdt;
+    assert(Dt.dd^2 == 0 and isHomogeneous Dt and betti Dt == betti Ct);
+    assert(pdf.dd^2 == 0 and isHomogeneous pdf and betti pdf == betti Ct);
+    )
+  -- a twisted non-minimal complex with a unit in its 0-th differential:
+  -- pruneDiff removes the unit and recovers the twisted minimal Betti table
+  C0 = freeResolution coker matrix{{x^2,y^2,z^2}}
+  NM = (C0 ++ complex(hashTable {1 => map(R^{-3}, R^{-3}, 1)})) ** R^{-2}
+  expected = betti(C0 ** R^{-2})
+  D0 = first pruneDiff(NM, 0)
+  assert(D0.dd^2 == 0 and isHomogeneous D0 and betti D0 == expected)
+  assert(betti pruneDiff(NM, 0, PruningMap => false) == expected)
+  -- pruning a later differential leaves the leftmost module untouched
+  NM2 = (C0 ++ complex(hashTable {2 => map(R^{-3}, R^{-3}, 1)})) ** R^{-2}
+  assert(betti first pruneDiff(NM2, 1) == expected)
+  assert(betti pruneDiff(NM2, 1, PruningMap => false) == expected)
+  -- the three-argument form, initialized with the identity pruning morphism
+  idMorph = D -> (
+    mc := toMutableComplex D;
+    (for i to #mc - 1 list mutableIdentity(ring D, numRows mc#i))
+      | {mutableIdentity(ring D, numColumns mc#(#mc-1))})
+  D3 = first pruneDiff(NM, 0, idMorph NM)
+  assert(D3.dd^2 == 0 and isHomogeneous D3 and betti D3 == expected)
+  assert(betti pruneDiff(NM, 0, idMorph NM, PruningMap => false) == expected)
+///
+
 -- stress test: every Strategy x Direction combination of pruneComplex yields
 -- a valid complex quasi-isomorphic to R/I.
 TEST ///
