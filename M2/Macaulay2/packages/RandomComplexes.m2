@@ -130,6 +130,13 @@ oneMatrix(ZZ,ZZ):= (n,m) -> matrix apply(n,i->apply(m,j-> 1))
 randomChainComplex(List,List):= opts -> (h,r)-> (
     -- lists h_0,..,h_n,r_1,...,r_n
     -- of possible possible homology dimensions and ranks of maps in a chain complex
+    -- FIXME: the matrix ranks r are always achieved, but the homology ranks
+    -- are not guaranteed to match h.  For large entries of r the random
+    -- products A*B*C can have homology ranks that differ from the requested
+    -- list h; one of the TEST blocks below even disables its homology check
+    -- for this reason ("ouch, this needs improvement").  The construction
+    -- should be reworked so that the homology ranks reliably equal h, as the
+    -- documentation promises.
     if #h =!= #r+1 then error "expected list of non-negative integers of length n+1 and n";
     rr:=append(prepend(0,r),0);
     c:=for i from 0 to #h-1 list h_i+rr_i+rr_(i+1); 
