@@ -258,17 +258,20 @@ pruneComplex = method(
     Options => {
         Strategy => Engine, -- set to null to use the methods above
         Direction => "left",
-        PruningMap => true, -- TODO: grading may be incorrect if this is set to false
+        PruningMap => true, -- whether to expose the pruning morphism in D.cache.pruningMap
         UnitTest => isUnit -- TODO: detect when all units are scalars and choose that
         })
 pruneComplex Complex      := opts ->  C          -> pruneComplex(C, -1, opts)
 pruneComplex(Complex, ZZ) := opts -> (C, nsteps) -> (
     m := min C;
     mComplex := toMutableComplex C;
-    (D, M) := pruneComplex(mComplex, nsteps, opts);
-    F := if opts.PruningMap == true
-    then source map(target C.dd_(m+1), , matrix M#0)
-    else target matrix D#0;
+    -- The pruning morphism is computed internally regardless of the PruningMap
+    -- option, since it is needed to grade the pruned complex correctly;
+    -- PruningMap only controls whether it is exposed in D.cache.pruningMap.
+    (D, M) := pruneComplex(mComplex, nsteps,
+        Strategy => opts.Strategy, Direction => opts.Direction,
+        PruningMap => true, UnitTest => opts.UnitTest);
+    F := source map(target C.dd_(m+1), , matrix M#0);
     D = (toChainComplex(D, F))[-m];
     R := ring D;
     if opts.PruningMap == true then

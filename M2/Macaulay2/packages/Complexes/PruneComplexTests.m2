@@ -374,27 +374,27 @@ TEST ///
   assert(#findAllUnits N === 0)
 ///
 
--- the PruningMap option.  With PruningMap => true the grading is preserved,
--- including degree twists.  With PruningMap => false the result is still a
--- valid complex; per the TODO in PruneComplex.m2 the degree twist is not
--- preserved in that case, so it is exercised here only on untwisted input.
+-- the PruningMap option of pruneComplex.  The pruned complex is correctly
+-- graded -- including any degree twist of the input -- with either value of
+-- PruningMap; the option only controls whether the pruning morphism is
+-- exposed in the cache.
 TEST ///
   debug needsPackage "Complexes"
   R = ZZ/32003[x,y,z]
   C = freeResolution coker matrix{{x^2,y^2,z^2}}
   At = pruneComplex(C, PruningMap => true)
-  assert(At.dd^2 == 0 and isHomogeneous At)
-  assert(betti At == betti C)
+  Af = pruneComplex(C, PruningMap => false)
+  assert(At.dd^2 == 0 and isHomogeneous At and betti At == betti C)
+  assert(Af.dd^2 == 0 and isHomogeneous Af and betti Af == betti C)
+  -- PruningMap => true exposes the pruning morphism; => false does not
   assert(isCommutative At.cache.pruningMap)
-  -- PruningMap => true preserves a degree twist
+  assert(not Af.cache.?pruningMap)
+  -- the grading, including a degree twist, is preserved with either value
   Ct = C ** R^{-5}
   Bt = pruneComplex(Ct, PruningMap => true)
-  assert(Bt.dd^2 == 0 and isHomogeneous Bt)
-  assert(betti Bt == betti Ct)
-  -- PruningMap => false yields a valid complex; on untwisted input it agrees
-  Af = pruneComplex(C, PruningMap => false)
-  assert(Af.dd^2 == 0 and isHomogeneous Af)
-  assert(betti Af == betti C)
+  Bf = pruneComplex(Ct, PruningMap => false)
+  assert(Bt.dd^2 == 0 and isHomogeneous Bt and betti Bt == betti Ct)
+  assert(Bf.dd^2 == 0 and isHomogeneous Bf and betti Bf == betti Ct)
 ///
 
 -- stress test: prune a larger non-minimal resolution under both UnitTest
