@@ -145,6 +145,10 @@ isLicci(ZZ, ZZ, Ideal) := opts -> (b,c,I) -> (
     --output is list of up to b integers, the numbers of generators of the
     --successive random links
     J := I;
+    -- a complete intersection (numgens == codim) is licci; detect it up front,
+    -- since randomLink would link it to the unit ideal and the test below
+    -- would then wrongly report it as not licci
+    if numgens J == c then return true;
     p := numgens J;
     count := 0;
 --    <<p<<endl;flush;
@@ -939,6 +943,18 @@ assert(linkageBound ideal(x^2,y^3) == 14)
 -- the UseNormalModule strategy computes a different (here smaller) bound
 assert(linkageBound(ideal(x^2,y^3), UseNormalModule => true) == 0)
 assert(linkageBound(ideal(x^2,y^3)) != linkageBound(ideal(x^2,y^3), UseNormalModule => true))
+///
+
+TEST ///
+-- isLicci: every complete intersection is licci, and so is every perfect
+-- codimension-2 ideal (the n-by-n minors of an n-by-(n+1) matrix)
+setRandomSeed 0
+T = QQ[x,y,z]
+assert(isLicci ideal(x,y))
+assert(isLicci ideal(x^2,y^2))
+assert(isLicci ideal(x^2,y^2,z^2))
+S = ZZ/32003[a..f]
+assert(isLicci minors(2, genericMatrix(S,a,2,3)))
 ///
 
 end--
