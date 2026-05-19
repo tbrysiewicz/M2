@@ -609,6 +609,108 @@ TEST ///
   C.dd
   disturb(C,.000001)
 ///
+
+TEST ///
+  -- maximalEntry of a matrix: the largest absolute value among the entries
+  assert(maximalEntry matrix{{1,-5,3},{2,4,-2}} == 5)
+  assert(maximalEntry matrix{{0,0},{0,0}} == 0)
+  assert(class maximalEntry matrix{{1,2}} === RR)
+  -- maximalEntry of a complex: one value per differential
+  setRandomSeed "rc-maximalEntry"
+  C = randomChainComplex({1,1,1},{2,2})
+  me = maximalEntry C
+  assert(class me === List and #me == max C - min C)
+  assert(all(me, x -> x >= 0))
+  -- it requires the ring to be ZZ, QQ, or RR_53
+  assert(try (maximalEntry(C ** (ZZ/5)); false) else true)
+///
+
+TEST ///
+  -- histogram(L, n) splits [min L, max L] into n equal bins and counts entries
+  assert(histogram(toList(1..10), 5) == {2,2,2,2,2})
+  -- the bin counts always sum to the length of the list
+  assert(sum histogram(toList(1..37), 7) == 37)
+  assert(sum histogram({0.5, 1.0, 1.0, 2.0, 9.0}, 4) == 5)
+  assert(#histogram(toList(1..20), 8) == 8)
+///
+
+TEST ///
+  -- randomChainComplex(h, r): a complex over ZZ with prescribed homology ranks h
+  -- and differential ranks r
+  setRandomSeed "rc-randomChainComplex"
+  h = {2,3,2}; r = {2,2}
+  C = randomChainComplex(h, r)
+  assert(instance(C, Complex))
+  assert(ring C === ZZ)
+  assert(C.dd^2 == 0)
+  assert(min C == 0 and max C == #h - 1)
+  assert(h == for i from 0 to #h-1 list rank HH_i C)
+  assert(r == for i from 1 to #r list rank C.dd_i)
+  -- the WithLLL and ZeroMean options
+  C2 = randomChainComplex(h, r, WithLLL => false, ZeroMean => false)
+  assert(C2.dd^2 == 0)
+  assert(r == for i from 1 to #r list rank C2.dd_i)
+  -- the homology list must be one longer than the rank list
+  assert(try (randomChainComplex({1,1}, {1,1}); false) else true)
+///
+
+TEST ///
+  -- randomSimplicialComplex(k, n): the integral chain complex of a random
+  -- Stanley-Reisner complex on k+1 variables with n monomial generators
+  setRandomSeed "rc-randomSimplicialComplex"
+  C = randomSimplicialComplex(7, 20)
+  assert(instance(C, Complex))
+  assert(ring C === ZZ)
+  assert(C.dd^2 == 0)
+  assert(all(min C .. max C, i -> rank HH_i C >= 0))
+///
+
+TEST ///
+  -- normalize scales each differential so its maximal entry is 1
+  setRandomSeed "rc-normalize"
+  C = randomChainComplex({1,1,1},{2,2})
+  B = normalize C
+  assert(instance(B, Complex))
+  assert(B.dd^2 == 0)
+  assert(all(maximalEntry B, x -> x == 1))
+  -- normalize preserves the indexing and the homology ranks
+  assert(min B == min C and max B == max C)
+  assert((for i from min C to max C list rank HH_i (C ** QQ)) ==
+         (for i from min B to max B list rank HH_i B))
+  -- a complex already over QQ is accepted
+  BQ = normalize(C ** QQ)
+  assert(all(maximalEntry BQ, x -> x == 1))
+///
+
+TEST ///
+  -- disturb(C, epsilon) perturbs every differential entry by relative error
+  -- at most epsilon
+  setRandomSeed "rc-disturb"
+  C = (randomChainComplex({1,1,1},{2,2})) ** RR_53
+  eps = 1e-3
+  B = disturb(C, eps)
+  assert(instance(B, Complex))
+  assert(min B == min C and max B == max C)
+  assert(all(min C + 1 .. max C, i ->
+      maximalEntry(B.dd_i - C.dd_i) <= eps * maximalEntry(C.dd_i) + 1e-9))
+  -- the Continuous strategy is also supported
+  B2 = disturb(C, eps, Strategy => Continuous)
+  assert(instance(B2, Complex))
+  -- disturb requires a complex over ZZ, QQ, or RR
+  assert(try (disturb((randomChainComplex({1,1},{1})) ** (ZZ/7), eps); false) else true)
+///
+
+TEST ///
+  -- testTimeForLLLonSyzygies(r, n) returns the maximal entries of A, of the
+  -- syzygy basis, and of its LLL reduction, together with two timings
+  setRandomSeed "rc-LLL"
+  (m, t1, t2) = testTimeForLLLonSyzygies(8, 16, Height => 11)
+  assert(class m === List and #m == 3)
+  assert(all(m, x -> x >= 0))
+  assert(t1 >= 0 and t2 >= 0)
+  -- the LLL reduction does not increase the maximal entry of the syzygy basis
+  assert(m#2 <= m#1)
+///
 	    
 end--
 
