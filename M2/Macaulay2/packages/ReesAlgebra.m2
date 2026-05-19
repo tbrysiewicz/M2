@@ -113,6 +113,13 @@ fixupw = w -> if instance(w,String) then getSymbol w else w
 reesIdeal = method(
     Options => {
 	  Jacobian =>false,
+	  -- FIXME: DegreeLimit, BasisElementLimit, PairLimit, MinimalGenerators, and
+	  -- Strategy are declared here (and each has its own documentation node) but
+	  -- have no effect -- reesIdeal computes through symmetricKernel and saturate
+	  -- and never threads these options into that computation.  They are
+	  -- leftovers from an earlier implementation; only Jacobian, Variable, and
+	  -- Trim actually do anything.  These dead options should either be wired
+	  -- through or deprecated and removed (together with their doc nodes).
 	  DegreeLimit => {},
 	  BasisElementLimit => infinity,
 	  PairLimit => infinity,
