@@ -759,7 +759,7 @@ randomPolyominoWithFixedRank = method(Options => {})
 randomPolyominoWithFixedRank ZZ := opts -> n -> (
     Q := { {1,1} };  
     while (#Q < n) do (
-    allCandidates := flatten apply(Q, c -> admissibleCells(Q, c));
+    allCandidates := flatten apply(Q, c -> admissibleCells2(Q, c));
     available := toList(set allCandidates - set Q);
     newC:= available#(random(#available-1));
     Q = append(Q, newC);
@@ -774,9 +774,9 @@ randomPolyominoWithFixedRank ZZ := opts -> n -> (
 randomPolyomino = method(Options => {})
 randomPolyomino ZZ := opts -> m -> (
     n := random(1,m);
-    Q := { {1,1} };  
+    Q := { {1,1} };
     while (#Q < n) do (
-    allCandidates := flatten apply(Q, c -> admissibleCells(Q, c));
+    allCandidates := flatten apply(Q, c -> admissibleCells2(Q, c));
     available := toList(set allCandidates - set Q);
     newC := available#(random(#available-1));
     Q = append(Q, newC);
@@ -2278,6 +2278,20 @@ for Q in testCells do (
    );
 assert(isPalindromic switchingRookPolynomial rect(2,2));
 assert(isPalindromic switchingRookPolynomial rect(3,3));
+///
+
+TEST ///
+-- Regression test: randomPolyominoWithFixedRank and randomPolyomino must
+-- produce genuine edge-connected polyominoes (not merely king-connected
+-- collections), since they grow the collection by orthogonally adjacent cells.
+for s from 1 to 12 do (
+   setRandomSeed s;
+   P = randomPolyominoWithFixedRank 7;
+   assert(rankCollection P == 7);
+   assert(first collectionIsConnected P);
+   R = randomPolyomino 9;
+   assert(first collectionIsConnected R);
+   );
 ///
 
 
