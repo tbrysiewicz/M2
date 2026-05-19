@@ -220,9 +220,9 @@ normalize Complex := C-> (
 	    m := max(flatten entries D.dd_i/abs);
    	    (1/m) * D.dd_i
         );
-    -- this next line is not correct: it might negate some differentials.
-    -- if the complex has minC odd...
-    (complex C')[-minC]
+    -- place the complex back at its original starting degree; using a shift
+    -- here would negate the differentials when minC is odd
+    complex(C', Base => minC)
     )
  
 beginDocumentation()
@@ -680,6 +680,12 @@ TEST ///
   -- a complex already over QQ is accepted
   BQ = normalize(C ** QQ)
   assert(all(maximalEntry BQ, x -> x == 1))
+  -- regression: a complex whose minimum degree is odd must be normalized
+  -- without a spurious sign flip on the differentials
+  D = C[1]
+  ND = normalize D
+  sc = max(flatten entries((D ** QQ).dd_0) / abs)
+  assert(ND.dd_0 == (1/sc) * (D ** QQ).dd_0)
 ///
 
 TEST ///
