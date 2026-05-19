@@ -345,7 +345,11 @@ hasSlidingDepth = method()
 hasSlidingDepth(ZZ,Ideal) := (k,I) -> (
     d := dim I;
     s := numColumns(mingens I)-codim I;
-    if k >= s then k;
+    -- s = numgens(I) - codim(I) is the top index of nonvanishing Koszul
+    -- homology, so the sliding depth condition saturates at k = s; clamp k
+    -- there to keep the loop below from probing Koszul homology in negative
+    -- degree (this line previously read "if k >= s then k;", a no-op)
+    if k >= s then k = s;
     all(k, i -> (koszulDepth(s-i-1,I))>=d-i-1)
     )
 
