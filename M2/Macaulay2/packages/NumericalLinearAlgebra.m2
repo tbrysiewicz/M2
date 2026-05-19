@@ -120,10 +120,13 @@ colReduce Matrix := o -> M -> (
     M
     )
 
+-- Test colReduce, Normalize
 TEST ///
 N = matrix {{0.001, 0, 0}, {1, 1, 3}, {2, 2, 5.999}}
-N = colReduce(N, Tolerance=>0.01)
-assert(numcols N == 1)
+N1 = colReduce(N, Tolerance=>0.01)
+assert(numcols N1 == 1)
+N2 = colReduce(N, Tolerance=>0.01, Normalize => false)
+assert(N1 != N2)
 ///
 
 --a list of column indices for a basis of the column space of M
