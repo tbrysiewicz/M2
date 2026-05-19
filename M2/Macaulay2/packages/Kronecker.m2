@@ -643,6 +643,10 @@ elementaryDivisors(Matrix, Ideal, ZZ, RingElement) := (P, J, n, prevGen) -> (
 	  )
      )
 
+-- FIXME: kroneckerIndices calls checkPencil, which activates an internally
+-- constructed ring, and -- unlike kroneckerNormalForm -- never restores the
+-- caller's ring with `use`.  After a call to kroneckerIndices the symbols
+-- supplied as x and y refer to that internal ring instead of the original.
 kroneckerIndices = method()
 kroneckerIndices(Matrix, RingElement, RingElement) := (P,x,y) -> (
      checkPencil(P,x,y);
@@ -716,6 +720,7 @@ TEST ///
 	       {map(Q^0, Q^1, {})}
      scan(L, P -> (
 	       err := kroneckerNormalForm(P, ChangeMatrix => {false, false}) - (kroneckerNormalForm P)#0;
+	       -- TODO: leftover debugging line, can be removed
 	       --if err != 0 then print P;
 	       assert(err == 0);
 	       ))
@@ -766,6 +771,10 @@ decomposeModule(Module) := M -> (
 	       	    *map(coker f2, N, (i,j) -> f3((P^(-1))_j_i))}))
      )
 
+-- TODO: this conditional block is dead code.  Its guard
+-- version#"VERSION" <= "1.1" is never satisfied by a supported Macaulay2,
+-- so the GradedModuleMap methods defined inside it are unreachable and the
+-- whole block can be removed.
 if version#"VERSION" <= "1.1" then (
 
 GradedModuleMap + GradedModuleMap := (f,g) -> (
@@ -949,6 +958,7 @@ GradedModule / GradedModule := (M,N) -> (
 injection = method()
 injection(GradedModuleMap) := f -> map(target f, coimage f, j -> f_j, Degree => degree f)
 
+-- TODO: doubleDualMap is exported but has no documentation node.
 doubleDualMap = method()
 doubleDualMap(Module,Module) := (M,N) -> (
      F := Hom(M,N);
@@ -956,6 +966,11 @@ doubleDualMap(Module,Module) := (M,N) -> (
      apply(columns gens M, v -> map(N, F, joinColumns(N, apply(maps, phi -> phi*map(M, , v)))))
      )
 
+-- FIXME: decomposeGradedModule is built on the legacy GradedModule API
+-- (superseded by the Complexes package) and is effectively unreachable: a
+-- GradedModuleMap argument cannot be constructed because gradedModule(Module)
+-- has no method in current Macaulay2, and the body below itself relies on
+-- `gradedModule source v`.  It should be ported to the Complexes package.
 decomposeGradedModule = method()
 decomposeGradedModule(GradedModuleMap, GradedModuleMap) := (x,y) -> (
      scan({x,y}, z -> (
