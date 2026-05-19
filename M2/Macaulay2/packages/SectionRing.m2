@@ -66,6 +66,14 @@ globallyGenerated(Ideal) := (I) -> (
 	globallyGenerated(divisor(I))
 );
 
+-- FIXME: globallyGenerated(Module) can hang in an infinite loop.  It calls
+-- globallyGenerated(divisor M), and globallyGenerated(WeilDivisor) above
+-- assumes the divisor is ample -- its `while ... do (a = 2*a)` loop never
+-- terminates for a non-ample divisor, and divisor(module M) need not be ample.
+-- Example that hangs:
+--   R = QQ[x,y,z]/ideal(x^3+y^3-z^3); I = ideal(x,y-z);
+--   globallyGenerated(module I)
+-- whereas globallyGenerated(I) and globallyGenerated(divisor I) both return 2.
 globallyGenerated(Module) := (M) -> (
 	globallyGenerated(divisor(M))
 );
