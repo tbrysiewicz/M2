@@ -1909,6 +1909,11 @@ assert(minimalPrimes ideal 4_R == {ideal 2_R})
 assert(minimalPrimes ideal 5_R == {})
 ///
 
+-- installMinprimes is deprecated; calling it emits a warning and returns null
+TEST ///
+assert(installMinprimes() === null)
+///
+
 end--
 
 -- UHOH problem with finite fields
