@@ -263,6 +263,159 @@ TEST ///
 --  prune HH f -- To slow, probably why isQuasiIsomorphism is slow
 ///
 
+-- Tests added in the 2026 test-audit pass: direct coverage for previously
+-- untested functions and options, plus stress tests.
+
+-- isScalar: a scalar is a nonzero element that lifts to the coefficient ring.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y,z]
+  assert isScalar 1_R
+  assert isScalar 3_R
+  assert not isScalar 0_R
+  assert not isScalar x
+  assert not isScalar(x*y)
+  assert not isScalar(x + 1)
+///
+
+-- toMutableComplex / toChainComplex: a complex round-trips through the
+-- mutable-matrix representation with its Betti table preserved.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y,z]
+  C = freeResolution coker matrix{{x,y,z}}
+  MC = toMutableComplex C
+  assert(class MC === List)
+  assert(#MC === 4)
+  assert all(MC, m -> class m === MutableMatrix)
+  D = toChainComplex MC
+  assert(class D === Complex)
+  assert(D.dd^2 == 0)
+  assert(betti C == betti D)
+///
+
+-- pruneUnit: removing a 1x1 unit from a hand-crafted mutable complex shrinks
+-- the differential by one row and one column.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y]
+  mComplex = {mutableMatrix matrix{{1_R, x},{0_R, y}}}
+  assert(numRows mComplex#0 === 2 and numColumns mComplex#0 === 2)
+  pruneUnit(mComplex, 0, (0,0), {}, PruningMap => false)
+  assert(numRows mComplex#0 === 1 and numColumns mComplex#0 === 1)
+///
+
+-- pruneDiff: prunes a single differential, returning a pruning-map pair when
+-- PruningMap => true and just the complex when PruningMap => false.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[a..f]
+  C = freeRes ideal"abc-def,ab2-cd2,acd-b3"
+  (D, M) = pruneDiff(C, 0)
+  assert(class D === Complex)
+  assert(D.dd^2 == 0)
+  D' = pruneDiff(C, 0, PruningMap => false)
+  assert(class D' === Complex)
+  assert(D'.dd^2 == 0)
+///
+
+-- stress test: every Strategy x Direction combination of pruneComplex yields
+-- a valid complex quasi-isomorphic to R/I.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[a..f]
+  I = ideal"abc-def,ab2-cd2,acd-b3"
+  C = freeRes I
+  for st in {Engine, null} do
+    for dir in {"left", "right", "both", "best"} do (
+      D := pruneComplex(C, Strategy => st, UnitTest => isScalar, Direction => dir);
+      assert(D.dd^2 == 0);
+      assert isQuasiIsomorphismOf(D, I);
+      )
+///
+
+-- pruneComplex minimizes a non-minimal resolution: freeRes produces a
+-- non-minimal resolution, and pruneComplex recovers the minimal one.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[a..f]
+  I = ideal"abc-def,ab2-cd2,acd-b3"
+  C = freeRes I
+  D = pruneComplex C
+  assert(D.dd^2 == 0)
+  assert isHomogeneous D
+  assert isQuasiIsomorphismOf(D, I)
+  assert(betti D == betti freeResolution I)
+  assert(betti D === new BettiTally from {(0,{0},0) => 1, (1,{3},3) => 3, (2,{6},6) => 3, (2,{7},7) => 1, (3,{8},8) => 2})
+///
+
+-- isMinimal: detects whether a complex has any remaining units.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[a..f]
+  C = freeRes ideal"abc-def,ab2-cd2,acd-b3"
+  assert not isMinimal(C, UnitTest => isScalar)
+  D = pruneComplex(C, UnitTest => isScalar)
+  assert isMinimal(D, UnitTest => isScalar)
+///
+
+-- findUnit / findAllUnits / findSparseUnit: the unit-finding routines locate
+-- units in a mutable matrix.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y]
+  M = mutableMatrix matrix{{x, 1_R, y}, {1_R, x, 0_R}}
+  assert(findUnit M === (0,1))
+  assert(#findAllUnits M === 2)
+  assert(first findSparseUnit M === (0,1))
+  -- a matrix with no units
+  N = mutableMatrix matrix{{x, y}, {x*y, x^2}}
+  assert(findUnit N === null)
+  assert(#findAllUnits N === 0)
+///
+
+-- the PruningMap option.  With PruningMap => true the grading is preserved,
+-- including degree twists.  With PruningMap => false the result is still a
+-- valid complex; per the TODO in PruneComplex.m2 the degree twist is not
+-- preserved in that case, so it is exercised here only on untwisted input.
+TEST ///
+  debug needsPackage "Complexes"
+  R = ZZ/32003[x,y,z]
+  C = freeResolution coker matrix{{x^2,y^2,z^2}}
+  At = pruneComplex(C, PruningMap => true)
+  assert(At.dd^2 == 0 and isHomogeneous At)
+  assert(betti At == betti C)
+  assert(isCommutative At.cache.pruningMap)
+  -- PruningMap => true preserves a degree twist
+  Ct = C ** R^{-5}
+  Bt = pruneComplex(Ct, PruningMap => true)
+  assert(Bt.dd^2 == 0 and isHomogeneous Bt)
+  assert(betti Bt == betti Ct)
+  -- PruningMap => false yields a valid complex; on untwisted input it agrees
+  Af = pruneComplex(C, PruningMap => false)
+  assert(Af.dd^2 == 0 and isHomogeneous Af)
+  assert(betti Af == betti C)
+///
+
+-- stress test: prune a larger non-minimal resolution under both UnitTest
+-- options, over a polynomial ring and over a local ring.
+TEST ///
+  debug needsPackage "Complexes"
+  needsPackage "LocalRings"
+  R = ZZ/32003[x,y,z]
+  I = ideal"xyz+z5,2x2+y3+z7,3z5+y5"
+  C = freeRes I
+  for ut in {isUnit, isScalar} do (
+    D := pruneComplex(C, UnitTest => ut);
+    assert(D.dd^2 == 0);
+    assert isQuasiIsomorphismOf(D, I);
+    )
+  RP = localRing(R, ideal gens R)
+  DP = pruneComplex(C ** RP)
+  assert(DP.dd^2 == 0)
+///
+
+
 end--
 
 -------------------------------------------------------------------------------------------------------
