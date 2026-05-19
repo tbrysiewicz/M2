@@ -320,12 +320,8 @@ isStronglyCM(Ideal) := I -> (
     return result;
     )
 TEST///
---isStronglyCM
---koszulDepth
-
-restart
-loadPackage "ResidualIntersections"
-S = kk[vars(0..7)]
+-- isStronglyCM, koszulDepth, hasSlidingDepth on generic determinantal ideals
+S = ZZ/32003[vars(0..7)]
 m = genericMatrix(S,S_0,2,3)
 I = minors(2,m)
 assert(hasSlidingDepth(3,I) == true)
@@ -338,7 +334,6 @@ assert(koszulDepth I == {5,0,2})
 assert(hasSlidingDepth(1,I) == false)
 I = minors(2,genericSymmetricMatrix(S,S_0,3))
 assert(isStronglyCM I == false)
-hasSlidingDepth(,I)
 ///
 
 hasSlidingDepth = method()
@@ -923,6 +918,27 @@ TEST///
        I = minors(2, random(S^2, S^{3:-1}))
        assert(genericResidual(5,I) == (ideal vars S)^3)
        assert((genericArtinNagata(5,I))_0 === 0)
+///
+
+TEST ///
+-- depthsOfPowers: the depths of S/I^k for k = 1 .. s-c+1
+R = QQ[a,b,c,d,e,f]
+I = ideal(b*c,b*d,b*e,d*e,a*d*f,e*f)
+assert(codim I == 3)
+assert(depthsOfPowers(6,3,I) == {3,1,1,1})
+-- the two-argument form computes the codimension itself
+assert(depthsOfPowers(6,I) == depthsOfPowers(6,3,I))
+assert(class depthsOfPowers(6,I) === List)
+///
+
+TEST ///
+-- linkageBound: the default formula 2*codim*(degree-1) - 6, clamped below at 0
+R = QQ[x,y]
+assert(linkageBound ideal(x,y) == 0)
+assert(linkageBound ideal(x^2,y^3) == 14)
+-- the UseNormalModule strategy computes a different (here smaller) bound
+assert(linkageBound(ideal(x^2,y^3), UseNormalModule => true) == 0)
+assert(linkageBound(ideal(x^2,y^3)) != linkageBound(ideal(x^2,y^3), UseNormalModule => true))
 ///
 
 end--
