@@ -1042,6 +1042,99 @@ decomposeGradedModule(GradedModuleMap, GradedModuleMap) := (x,y) -> (
      (newx, newy, joinColumns(M, mygens))
      )
 
+TEST ///
+  -- rationalNormalForm A returns (B,P,Q) with B = P*A*Q and P*Q = I
+  setRandomSeed 0
+  R = ZZ/101[x]
+  M = R^4
+  A = random(M,M)
+  (B,P,Q) = rationalNormalForm A
+  assert(B - P*A*Q == 0)
+  assert(P*Q - id_M == 0)
+  -- ChangeMatrix => {false,false} returns just the normal form, which agrees
+  assert(rationalNormalForm(A, ChangeMatrix => {false,false}) == B)
+  -- a non-square matrix is rejected
+  assert(try (rationalNormalForm random(R^2, R^3); false) else true)
+///
+
+TEST ///
+  -- kroneckerNormalForm A returns (B,P,Q) with B = P*A*Q and P, Q invertible
+  setRandomSeed 0
+  R = ZZ/101[x,y]
+  A = matrix{{x,y,x,y},{y,x,y,x},{x,y,x,y},{y,y,y,y},{x,x,y,y}}
+  (B,P,Q) = kroneckerNormalForm A
+  assert(B - P*A*Q == 0)
+  assert(det P != 0 and det Q != 0)
+  -- the (A,x,y) overload, with complementary linear forms x+y and x-y
+  (B2,P2,Q2) = kroneckerNormalForm(A, x+y, x-y)
+  assert(B2 - P2*A*Q2 == 0)
+  -- the pair-of-scalar-matrices overload: P*A*Q = A', P*B*Q = B'
+  C = random(QQ^2, QQ^5)
+  D = random(QQ^2, QQ^5)
+  (Cn,Dn,P3,Q3) = kroneckerNormalForm(C,D)
+  assert(P3*C*Q3 - Cn == 0)
+  assert(P3*D*Q3 - Dn == 0)
+///
+
+TEST ///
+  -- kroneckerIndices(P,x,y) returns the triple (column minimal indices, row
+  -- minimal indices, elementary divisors) classifying the pencil P
+  R = ZZ/101[x,y]
+  xy = x - y
+  A = matrix{{x,y,x,y},{y,x,y,x},{x,y,x,y},{y,y,y,y},{x,x,y,y}}
+  ki = kroneckerIndices(A,x,y)
+  assert(class ki === Sequence and #ki == 3)
+  -- one column minimal index 0 and two row minimal indices 0, 1
+  assert(ki#0 === {0} and ki#1 === {0,1})
+  -- two elementary divisors, both equal to x - y (returned in factored form)
+  divs = apply(ki#2, value)
+  assert(#divs == 2 and all(divs, e -> e == xy))
+  -- these indices classify the pencil up to strict equivalence, so the
+  -- Kronecker normal form has the same indices as the original
+  B = kroneckerNormalForm(A, ChangeMatrix => {false,false})
+  assert(kroneckerIndices(B,x,y) === ki)
+  -- the matrix-pair overload accepts a pencil given as two scalar matrices;
+  -- this pair is a single 2-by-3 singular block with column minimal index 2
+  C = matrix(QQ, {{1,0,0},{0,1,0}})
+  D = matrix(QQ, {{0,1,0},{0,0,1}})
+  kiCD = kroneckerIndices(C,D)
+  assert(class kiCD === Sequence and #kiCD == 3)
+  assert(kiCD === ({2},{},{}))
+///
+
+TEST ///
+  -- decomposeModule M returns (N, f), with N a direct sum of simple modules
+  -- and f : N -> M an isomorphism
+  setRandomSeed 0
+  Q = ZZ/101[x,y]
+  R = Q/(x^2,y^2)
+  M = coker random(R^5, R^8 ** R^{-1})
+  (N, f) = decomposeModule M
+  assert(ker f == 0)
+  assert(coker f == 0)
+  assert(source f === N)
+  assert(target f == M)
+///
+
+TEST ///
+  -- doubleDualMap(M,N): for each generator v of M, the evaluation map
+  -- Hom(M,N) -> N sending a homomorphism phi to phi(v)
+  R = ZZ/101[x,y]
+  M = R^2
+  N = R^1
+  F = Hom(M,N)
+  ev = doubleDualMap(M,N)
+  assert(class ev === List and #ev == numgens M)
+  assert(all(ev, m -> class m === Matrix and isWellDefined m))
+  assert(all(ev, m -> target m === N and source m === F))
+  -- each ev#i applied to a generator phi of Hom(M,N) yields phi evaluated at
+  -- the i-th generator of M
+  phis = apply(numColumns gens F, j -> homomorphism map(F, , (gens F)_{j}))
+  genM = apply(numColumns gens M, i -> map(M, , (gens M)_{i}))
+  assert all(numgens M, i -> all(numgens F, j ->
+      ev#i * map(F, , (gens F)_{j}) == phis#j * genM#i))
+///
+
 beginDocumentation()
 
 document {
