@@ -94,7 +94,7 @@ glynn Matrix := (M) -> (
       n := numgens target M;
       R :=ring(M);
       
-      if char R==2 then print("ring has characteristic 2");
+      if char R==2 then error "Glynn's formula requires the coefficient ring to have characteristic other than 2";
       
       E :=entries M;
       --these are the sums of the rows
@@ -250,7 +250,7 @@ pminors (ZZ,Matrix) := opts -> (i,M) -> (
     R := ring M;
     E := entries M;
      
-    if (i>m or i>n) then (I:=ideal(1);) else(
+    if (i>m or i>n) then (I:=ideal(1_R);) else(
     
     rows := subsets(n,i);
     cols := subsets(m,i);
@@ -388,6 +388,11 @@ TEST ///
   -- Ryser's and Glynn's formulas agree on a larger matrix
   N = matrix{{2,3,5,7},{11,13,17,19},{23,29,31,37},{41,43,47,53}}
   assert(ryser N == glynn N)
+  -- glynn divides by 2^(n-1), so it requires characteristic other than 2
+  kk = ZZ/2
+  assert(try (glynn id_(kk^2); false) else true)
+  -- ryser uses no division and still works in characteristic 2
+  assert(ryser matrix{{1_kk,1},{1,1}} == 0)
 ///
 
 TEST ///
@@ -434,8 +439,9 @@ TEST ///
   assert(numgens pminors(2, G) == 9)             -- binomial(3,2)^2 minors
   -- a rectangular matrix: the 2-by-2 permanental minors of a 2-by-3 matrix
   assert(pminors(2, matrix{{1,2,3},{4,5,6}}) == ideal(13,18,27))
-  -- when k exceeds a dimension of M, the result is the unit ideal
-  assert(pminors(3, M) == ideal 1)
+  -- when k exceeds a dimension of M, the result is the unit ideal of ring M
+  assert(pminors(3, M) == ideal 1_R)
+  assert(ring pminors(3, M) === R)
   assert(pminors(5, matrix{{1,2},{3,4}}) == ideal 1)
 ///
 
