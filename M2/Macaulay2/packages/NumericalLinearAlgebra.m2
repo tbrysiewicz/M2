@@ -127,6 +127,12 @@ N1 = colReduce(N, Tolerance=>0.01)
 assert(numcols N1 == 1)
 N2 = colReduce(N, Tolerance=>0.01, Normalize => false)
 assert(N1 != N2)
+N3 = colReduce(N, Reverse=>true, Normalize=>true)
+-- pivots should still all be 1Reverse=>true
+assert(all(0..numcols N3-1, j -> (
+    pivotRow := maxPosition apply(numrows N3, i -> abs N3_(i,j));
+    abs(N3_(pivotRow,j) - 1.) < 1e-10
+)))
 ///
 
 --a list of column indices for a basis of the column space of M
