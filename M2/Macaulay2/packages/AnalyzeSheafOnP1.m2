@@ -264,16 +264,16 @@ S = k[a,b]
 M = S^1/ideal(a^3)++S^{-1}/(ideal b^2)++S^1/(ideal b^2)++ S^{-1,1}
 L = analyze M
 L_1 == { -2*a^3 , b^2 , b^2}
-doubleDualMap M ==
-    map(Hom(Hom(M,S^1),S^1), M, matrix {{0, 0, 0, 1_S, 0}, {0, 0, 0, 0, 1_S}})
+assert(doubleDualMap M ==
+    map(Hom(Hom(M,S^1),S^1), M, matrix {{0, 0, 0, 1_S, 0}, {0, 0, 0, 0, 1_S}}))
 ///
 
 TEST///
 k = ZZ/101
 S = k[a,b]
 M = S^1/ideal(a^3)
-isNZD(a,M) == false
-isNZD(a+b,M) == true
+assert(isNZD(a,M) == false)
+assert(isNZD(a+b,M) == true)
 ///
 
 TEST///
