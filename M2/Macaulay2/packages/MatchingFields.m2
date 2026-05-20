@@ -29,6 +29,8 @@ export {
     "getWeightPluecker",
     "getGrMatchingFields",
     "matchingFieldPolytope",
+    -- TODO: add a TEST exercising ExtraZeroRows with a non-default value
+    -- (option to matchingFieldPolytope / matchingFieldPolytopePoints).
     "ExtraZeroRows",
     "diagonalMatchingField",
     "matchingFieldRingMap",
@@ -37,6 +39,9 @@ export {
     "plueckerMap",
     "plueckerAlgebra",
     "matchingFieldFromPermutation",
+    -- TODO: add TESTs exercising the matchingFieldFromPermutation options
+    -- RowNum, UsePrimePowers, ScalingCoefficient, PowerValue with non-default
+    -- values and assert the resulting matching field changes accordingly.
     "RowNum",
     "UsePrimePowers",
     "ScalingCoefficient",
@@ -47,6 +52,8 @@ export {
     "weightMatrixCone",
     "isCoherent",
     "linearSpanTropCone",
+    -- TODO: add a TEST exercising linearSpanTropCone with
+    -- VerifyToricDegeneration => true on a small known degeneration.
     "VerifyToricDegeneration",
     "algebraicMatroid",
     "algebraicMatroidBases",
