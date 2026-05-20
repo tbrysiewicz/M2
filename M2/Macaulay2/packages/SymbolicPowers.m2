@@ -1960,75 +1960,7 @@ I=intersect(ideal(x_1,x_2),ideal(x_2,x_3),ideal(x_3,x_1),ideal(x_3,x_4),ideal(x_
 assert(noPackedAllSubs I=={{"x_1=>0", "x_2=>1", "x_3=>1"}, {"x_2=>0", "x_1=>1", "x_3=>1"}, {"x_5=>0", "x_4=>1", "x_6=>1"}, {"x_6=>0", "x_4=>1", "x_5=>1"}})
 ///
 
-end
-
-restart
-uninstallPackage"SymbolicPowers"
-loadPackage"SymbolicPowers"
-
-restart
-uninstallPackage"SymbolicPowers"
-restart
-installPackage"SymbolicPowers"
-viewHelp"SymbolicPowers"
-check"SymbolicPowers"
-
-needsPackage"SymbolicPowers"
-R = QQ[x,y]
-I = ideal"x+y"
-symbolicPolyhedron I
-
-restart
--- Paper Example Ideal of height dim R-1
-loadPackage "SymbolicPowers";
-R=QQ[x,y,z];
-I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
-symbolicPower(I,3);
-symbolicPower(I,3)==saturate(I^3)
-
--- Paper Example Primary ideals
-restart
-loadPackage "SymbolicPowers";
-R=QQ[w,x,y,z]/(x*y-z^2);
-I=ideal(x,z);
-symbolicPower(I,2)
-
-restart
--- Paper Example Monomial Ideal
-loadPackage "SymbolicPowers";
-R = QQ[x,y,z];
-I = ideal(x*y,x*z,y*z)
-symbolicPower(I,2)
-
-restart
--- Paper Example Containment Problem
-loadPackage "SymbolicPowers";
-R=QQ[x,y,z];
-I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
-containmentProblem(I,2)
-
-restart
--- Paper Example Waldschmidt constants of monomial ideals
-loadPackage "SymbolicPowers";
-R=QQ[x,y,z];
-I=ideal(x*y,x*z,y*z);
-symbolicPolyhedron(I)
-waldschmidt I
-
-restart
--- Paper Example Waldschmidt constants of arbitrary ideals
-loadPackage "SymbolicPowers";
-R=QQ[x,y,z];
-I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
-waldschmidt I
-
-
-lowerBoundResurgence(I)
-
-
-
 ------testing CIPRimes
-loadPackage "SymbolicPowers"
 loadPackage "Points"
 I=randomPoints(2,10);
 time symbolicPower(I,6,CIPrimes=>true);
@@ -2117,3 +2049,69 @@ R = QQ[x,y,z];
 J = ideal (x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
 assert(waldschmidt(J, SampleSize=>5)==3)
 ///
+
+
+end
+
+restart
+uninstallPackage"SymbolicPowers"
+loadPackage"SymbolicPowers"
+
+restart
+uninstallPackage"SymbolicPowers"
+restart
+installPackage"SymbolicPowers"
+viewHelp"SymbolicPowers"
+check"SymbolicPowers"
+
+needsPackage"SymbolicPowers"
+R = QQ[x,y]
+I = ideal"x+y"
+symbolicPolyhedron I
+
+restart
+-- Paper Example Ideal of height dim R-1
+loadPackage "SymbolicPowers";
+R=QQ[x,y,z];
+I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
+symbolicPower(I,3);
+symbolicPower(I,3)==saturate(I^3)
+
+-- Paper Example Primary ideals
+restart
+loadPackage "SymbolicPowers";
+R=QQ[w,x,y,z]/(x*y-z^2);
+I=ideal(x,z);
+symbolicPower(I,2)
+
+restart
+-- Paper Example Monomial Ideal
+loadPackage "SymbolicPowers";
+R = QQ[x,y,z];
+I = ideal(x*y,x*z,y*z)
+symbolicPower(I,2)
+
+restart
+-- Paper Example Containment Problem
+loadPackage "SymbolicPowers";
+R=QQ[x,y,z];
+I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
+containmentProblem(I,2)
+
+restart
+-- Paper Example Waldschmidt constants of monomial ideals
+loadPackage "SymbolicPowers";
+R=QQ[x,y,z];
+I=ideal(x*y,x*z,y*z);
+symbolicPolyhedron(I)
+waldschmidt I
+
+restart
+-- Paper Example Waldschmidt constants of arbitrary ideals
+loadPackage "SymbolicPowers";
+R=QQ[x,y,z];
+I=ideal(x*(y^3-z^3),y*(z^3-x^3),z*(x^3-y^3));
+waldschmidt I
+
+
+lowerBoundResurgence(I)

@@ -1460,9 +1460,6 @@ TEST ///
 -- gaussImage
 --    gaussImage(List)
 --    gaussImage(Matrix)
-TEST ///
-    ass
-///
 
 -- gausskFiber
 --    gausskFiber(List,ZZ)
