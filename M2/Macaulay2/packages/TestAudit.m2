@@ -30,7 +30,7 @@ testScore = method()
 
 testInputs = method()
 testInputs Package := pkg -> tests pkg
-testInputs String := pkgname -> testInputs needsPackage(pkgname, LoadDocumentation => true)
+testInputs String := pkgname -> testInputs needsPackage(pkgname, LoadDocumentation => false)
 
 
 -- The coverage checks below are textual heuristics, not dispatch tracing.
