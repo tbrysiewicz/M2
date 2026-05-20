@@ -406,6 +406,13 @@ isSCM(Ideal) := I -> (
     S:=ring I;
     d:=dim I;
     d0:=minimumDimension I;
+    -- TODO: suspected bug -- this dispatch disagrees with the Module dispatch (Schenzel,
+    -- above) on at least one input. Example: I = ideal(x_1^2*x_3, x_2*x_3^2*x_4,
+    -- x_1*x_3^3*x_5) in QQ[x_1..x_5]: isSCM(I) returns false here, but isSCM(S^1/I) and
+    -- the deficiency-module trace (each omega^i is zero or CM of dim i) both say true.
+    -- For i < d0, filterIdeal(I,i) returns I itself, so the depth-vs-(i+1) check becomes
+    -- restrictive at i = d0-1; whether Goodarzi (2011)'s characterization actually
+    -- requires the depth check for i < d0 should be verified against the paper.
     for i from 0 to d-1 do (
         Ii:=filterIdeal(I,i);
         Si:=(S^1/Ii);
