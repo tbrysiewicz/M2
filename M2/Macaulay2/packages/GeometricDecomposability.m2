@@ -48,6 +48,9 @@ export {
         "isUnmixed",
         "isWeaklyGVD",
         "oneStepGVDCyI",
+        -- TODO: the `link` alias shadows the topological `link` from the
+        -- SimplicialComplexes and Complexes packages; consider renaming or
+        -- documenting the collision.
         "link" => "oneStepGVDCyI",
         "oneStepGVD",
 
@@ -126,7 +129,9 @@ findOneStepGVD(Ideal) := List => opts -> I -> (
                 -- first get the indets with respect to which the ideal is "clearly" squarefree 
                 -- the variables y such that y^2 does not divide any term of any generator of I
                 gensTerms := flatten apply(I_*, terms);
-                isSquarefreeIndet := (termsList, y) -> ( 
+                -- TODO: the `termsList` parameter is unused (the body closes
+                -- over `gensTerms` from the outer scope); drop it.
+                isSquarefreeIndet := (termsList, y) -> (
                         L := apply(gensTerms, m -> degree(y, m));
                         return max L <= 1;
                         );
@@ -760,6 +765,11 @@ printIf(Boolean, String) := (bool, str) -> (
         if bool then print str;
         )
 
+        -- TODO: recursiveFlatten detects nesting by inspecting the third
+        -- character of `toString L`, which is fragile -- e.g., it errors
+        -- on `recursiveFlatten {}` (out-of-bounds string index) and returns
+        -- `{{}}` instead of `{}` for `recursiveFlatten {{}}`.  Rewrite to
+        -- test depth structurally (`instance(L#0, List)`).
         recursiveFlatten = method(TypicalValue => List)
         recursiveFlatten(List) := L -> (
                 Lstr := toString L;
