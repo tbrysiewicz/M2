@@ -1376,7 +1376,38 @@ TEST ///
 	        };
       I = minors(2, A) -- a non birational map
       assert((degreeOfMap I) <= (upperBoundDegreeSingleGraded I))
-    
+
+///
+
+TEST ///
+-- isBiratMap: birational and non-birational cases from the doc
+R = QQ[x,y,u,v, Degrees => {{1,0},{1,0},{0,1},{0,1}}];
+assert(isBiratMap ideal(x*u, y*u, y*v));
+assert(not isBiratMap ideal(x*u, y*v, x*v + y*u));
+///
+
+TEST ///
+-- Hm1Rees0 returns a Module; per the doc's birationality criterion it is zero for a birational single-graded map and nonzero otherwise
+R = QQ[a,b,c];
+A = matrix{{a, a^6 + b^6 + c*a^5}, {-b, b^6 + c*a^3*b^2}, {0, a^6 + a*b^4*c}};
+Ibirat = minors(2, A);
+assert(instance(Hm1Rees0 Ibirat, Module));
+assert(prune Hm1Rees0 Ibirat == 0);
+A2 = matrix{{a^2, a^2 + b^2}, {-b^2, b^2 + c*a}, {0, a^2}};
+Inonbirat = minors(2, A2);
+assert(prune Hm1Rees0 Inonbirat != 0);
+///
+
+TEST ///
+-- degreeOfMap Strategy option: Hm1Rees0Strategy and SatSpecialFibStrategy agree on a known birational map
+R = QQ[x,y,z];
+A = matrix{{x, x^2 + y^2}, {-y, y^2 + z*x}, {0, x^2}};
+I = minors(2, A);
+d1 = degreeOfMap(I, Strategy => Hm1Rees0Strategy);
+d2 = degreeOfMap(I, Strategy => SatSpecialFibStrategy);
+assert(d1 == 1);
+assert(d2 == 1);
+assert(d1 == d2);
 ///
 
 
