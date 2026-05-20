@@ -20,9 +20,6 @@ newPackage("EliminationMatrices",
    )
 
 export {
---	"matrixToListByColumns",
---	"matrixToListByRows",
---	"rankNum",
 	"maxCol",
 	"maxMinor",
 -- MAIN FUNCTIONS
@@ -31,17 +28,11 @@ export {
 	"detComplex",
 	"mapsComplex",
 	"minorsComplex",
---	"degMap",
---	"macRes",
 	"macaulayFormula",
 	"bezoutianMatrix",
---	"ciRes",
 	"ciResDeg",
 	"ciResDegGH",
---	"cm2Res",
---	"detRes",
 	"detResDeg",
---	"rankNE",
 	"Numeric",
 	"Exact",
 	"Sylvester",
@@ -53,6 +44,9 @@ export {
 	"eliminationMatrix",
 	"regularityVar"
 }
+-- Internal helpers defined but intentionally not exported:
+--   matrixToListByColumns, matrixToListByRows, rankNE, rankNum, degMap,
+--   macRes, ciRes, cm2Res, detRes  (used by the dispatchers above)
 
 
 --######################################################################
@@ -1798,14 +1792,25 @@ assert(detC1 == -detC3)
 -- Checking the function ciRes
 TEST ///
 
-R=QQ[a_0,a_1,a_2,a_3,a_4,b_0,b_1,b_2,b_3,b_4,c_0,c_1,c_2,c_3,c_4,x,y,z]; 
-G=matrix{{z,x^2+y^2}}; 
-H=matrix{{a_0*z+a_1*x+a_2*y,b_0*z+b_1*x+b_2*y,c_0*z+c_1*x+c_2*y},{a_3,b_3,c_3}}; 
+R=QQ[a_0,a_1,a_2,a_3,a_4,b_0,b_1,b_2,b_3,b_4,c_0,c_1,c_2,c_3,c_4,x,y,z];
+G=matrix{{z,x^2+y^2}};
+H=matrix{{a_0*z+a_1*x+a_2*y,b_0*z+b_1*x+b_2*y,c_0*z+c_1*x+c_2*y},{a_3,b_3,c_3}};
 L=eliminationMatrix({x,y,z},G,H, Strategy => ciResidual)
-maxCol L
+-- maxCol must return a maximal-rank column subset of L (rank L == 6 for this generic input)
+mc = maxCol L
+assert(numColumns mc#0 == rank L and rank mc#0 == rank L)
 
-
-assert(toString L == "matrix {{a_3, b_3, c_3, -a_3*b_1+a_1*b_3, 0, 0, -a_3*c_1+a_1*c_3, 0, 0, -b_3*c_1+b_1*c_3, 0, 0}, {0, 0, 0, -a_3*b_2+a_2*b_3, -a_3*b_1+a_1*b_3, 0, -a_3*c_2+a_2*c_3, -a_3*c_1+a_1*c_3, 0, -b_3*c_2+b_2*c_3, -b_3*c_1+b_1*c_3, 0}, {a_1, b_1, c_1, -a_3*b_0+a_0*b_3, 0, -a_3*b_1+a_1*b_3, -a_3*c_0+a_0*c_3, 0, -a_3*c_1+a_1*c_3, -b_3*c_0+b_0*c_3, 0, -b_3*c_1+b_1*c_3}, {a_3, b_3, c_3, 0, -a_3*b_2+a_2*b_3, 0, 0, -a_3*c_2+a_2*c_3, 0, 0, -b_3*c_2+b_2*c_3, 0}, {a_2, b_2, c_2, 0, -a_3*b_0+a_0*b_3, -a_3*b_2+a_2*b_3, 0, -a_3*c_0+a_0*c_3, -a_3*c_2+a_2*c_3, 0, -b_3*c_0+b_0*c_3, -b_3*c_2+b_2*c_3}, {a_0, b_0, c_0, 0, 0, -a_3*b_0+a_0*b_3, 0, 0, -a_3*c_0+a_0*c_3, 0, 0, -b_3*c_0+b_0*c_3}}")
+-- pin the ciResidual matrix entry-by-entry (avoids brittle toString comparison)
+assert(numRows L == 6 and numColumns L == 12)
+assert(ring L === R)
+assert(entries L == {
+    {a_3, b_3, c_3, -a_3*b_1+a_1*b_3, 0, 0, -a_3*c_1+a_1*c_3, 0, 0, -b_3*c_1+b_1*c_3, 0, 0},
+    {0, 0, 0, -a_3*b_2+a_2*b_3, -a_3*b_1+a_1*b_3, 0, -a_3*c_2+a_2*c_3, -a_3*c_1+a_1*c_3, 0, -b_3*c_2+b_2*c_3, -b_3*c_1+b_1*c_3, 0},
+    {a_1, b_1, c_1, -a_3*b_0+a_0*b_3, 0, -a_3*b_1+a_1*b_3, -a_3*c_0+a_0*c_3, 0, -a_3*c_1+a_1*c_3, -b_3*c_0+b_0*c_3, 0, -b_3*c_1+b_1*c_3},
+    {a_3, b_3, c_3, 0, -a_3*b_2+a_2*b_3, 0, 0, -a_3*c_2+a_2*c_3, 0, 0, -b_3*c_2+b_2*c_3, 0},
+    {a_2, b_2, c_2, 0, -a_3*b_0+a_0*b_3, -a_3*b_2+a_2*b_3, 0, -a_3*c_0+a_0*c_3, -a_3*c_2+a_2*c_3, 0, -b_3*c_0+b_0*c_3, -b_3*c_2+b_2*c_3},
+    {a_0, b_0, c_0, 0, 0, -a_3*b_0+a_0*b_3, 0, 0, -a_3*c_0+a_0*c_3, 0, 0, -b_3*c_0+b_0*c_3}
+    })
 ///
 
 
@@ -1816,7 +1821,14 @@ TEST ///
 R=ZZ[d_0..d_3,k_1,k_2]
 L=ciResDeg({d_0,d_1,d_2,d_3},{k_1,k_2})
 
-assert(toString L == "{d_0+d_1+d_2+d_3-3*k_2-3, {d_1*d_2*d_3-d_1*k_1*k_2-d_2*k_1*k_2-d_3*k_1*k_2+k_1^2*k_2+k_1*k_2^2, d_0*d_2*d_3-d_0*k_1*k_2-d_2*k_1*k_2-d_3*k_1*k_2+k_1^2*k_2+k_1*k_2^2, d_0*d_1*d_3-d_0*k_1*k_2-d_1*k_1*k_2-d_3*k_1*k_2+k_1^2*k_2+k_1*k_2^2, d_0*d_1*d_2-d_0*k_1*k_2-d_1*k_1*k_2-d_2*k_1*k_2+k_1^2*k_2+k_1*k_2^2}}")
+-- ciResDeg returns {regularity, partial-degree list}: pin via polynomial equality, not toString
+assert(L#0 == d_0+d_1+d_2+d_3 - 3*k_2 - 3)
+assert(L#1 == {
+    d_1*d_2*d_3 - d_1*k_1*k_2 - d_2*k_1*k_2 - d_3*k_1*k_2 + k_1^2*k_2 + k_1*k_2^2,
+    d_0*d_2*d_3 - d_0*k_1*k_2 - d_2*k_1*k_2 - d_3*k_1*k_2 + k_1^2*k_2 + k_1*k_2^2,
+    d_0*d_1*d_3 - d_0*k_1*k_2 - d_1*k_1*k_2 - d_3*k_1*k_2 + k_1^2*k_2 + k_1*k_2^2,
+    d_0*d_1*d_2 - d_0*k_1*k_2 - d_1*k_1*k_2 - d_2*k_1*k_2 + k_1^2*k_2 + k_1*k_2^2
+    })
 
 ///
 
@@ -1838,7 +1850,21 @@ Mat= (mapsComplex(regularity I -1, l, freeResolution I))_0
 fittI = minors(10,Mat)
 fittCmR = minors(10,CmR)
 
-assert(toString CmR == "matrix {{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, -X, 1, 0, -Y+1, 0, 0}, {0, 0, -Y, 0, 0, 0, -Z, 0, 1, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, -X, 0, 0, -Y+1, 0}, {0, 0, X, -Y, 0, 0, 0, -Z, -X, -Z, 0, -Y+1}, {0, 0, 0, 0, -Y, -1, 0, 0, -Z, 0, 0, 0}, {X, Y-1, 0, 0, 0, Z, 0, 0, 0, 0, 0, 0}, {0, 0, 0, X, 0, 0, 0, 0, 0, 0, -Z, 0}, {0, 0, 0, 0, X, 0, 0, 0, 0, 0, 0, -Z}, {X, Y, 0, 0, 0, Z, 0, 0, 0, 0, 0, 0}}")
+-- pin the CM2Residual matrix entry-by-entry (avoids brittle toString comparison)
+assert(numRows CmR == 10 and numColumns CmR == 12)
+assert(ring CmR === R)
+assert(entries CmR == {
+    {0, 0,  0,  0,  0,  0,  1,  0,  0,  0,    0,    0  },
+    {0, 0,  0,  0,  0,  0, -X,  1,  0, -Y+1,  0,    0  },
+    {0, 0, -Y,  0,  0,  0, -Z,  0,  1,  0,    0,    0  },
+    {-1,0,  0,  0,  0,  0,  0, -X,  0,  0,   -Y+1,  0  },
+    {0, 0,  X, -Y,  0,  0,  0, -Z, -X, -Z,   0,   -Y+1 },
+    {0, 0,  0,  0, -Y, -1,  0,  0, -Z,  0,    0,    0  },
+    {X, Y-1,0,  0,  0,  Z,  0,  0,  0,  0,    0,    0  },
+    {0, 0,  0,  X,  0,  0,  0,  0,  0,  0,   -Z,    0  },
+    {0, 0,  0,  0,  X,  0,  0,  0,  0,  0,    0,   -Z  },
+    {X, Y,  0,  0,  0,  Z,  0,  0,  0,  0,    0,    0  }
+    })
 
 assert(fittI == fittCmR)
 
@@ -1851,7 +1877,9 @@ TEST ///
 R = ZZ[d1,d2,d3,k1,k2]
 DRD = detResDeg(1, {d1,d2,d3},{k1,k2},R)
 
-assert(toString DRD == "{d1+d2+d3-k1-2*k2-1, {d2+d3-k1-k2, d1+d3-k1-k2, d1+d2-k1-k2}}")
+-- detResDeg returns {regularity, partial-degree list}: pin via polynomial equality, not toString
+assert(DRD#0 == d1+d2+d3 - k1 - 2*k2 - 1)
+assert(DRD#1 == {d2+d3-k1-k2, d1+d3-k1-k2, d1+d2-k1-k2})
 ///
 
 
@@ -1864,7 +1892,14 @@ R = QQ[a_0..a_5,b_0..b_5,x,y]
 M = matrix{{a_0*x+a_1*y,a_2*x+a_3*y,a_4*x+a_5*y},{b_0*x+b_1*y,b_2*x+b_3*y,b_4*x+b_5*y}}
 Res = eliminationMatrix(1,{x,y},M, Strategy => determinantal)
 
-assert(toString Res == "matrix {{-a_2*b_0+a_0*b_2, -a_4*b_0+a_0*b_4, -a_4*b_2+a_2*b_4}, {-a_3*b_0-a_2*b_1+a_1*b_2+a_0*b_3, -a_5*b_0-a_4*b_1+a_1*b_4+a_0*b_5, -a_5*b_2-a_4*b_3+a_3*b_4+a_2*b_5}, {-a_3*b_1+a_1*b_3, -a_5*b_1+a_1*b_5, -a_5*b_3+a_3*b_5}}")
+-- pin the determinantal matrix entry-by-entry (avoids brittle toString comparison)
+assert(numRows Res == 3 and numColumns Res == 3)
+assert(ring Res === R)
+assert(entries Res == {
+    {-a_2*b_0+a_0*b_2,                  -a_4*b_0+a_0*b_4,                  -a_4*b_2+a_2*b_4                },
+    {-a_3*b_0-a_2*b_1+a_1*b_2+a_0*b_3,  -a_5*b_0-a_4*b_1+a_1*b_4+a_0*b_5,  -a_5*b_2-a_4*b_3+a_3*b_4+a_2*b_5},
+    {-a_3*b_1+a_1*b_3,                  -a_5*b_1+a_1*b_5,                  -a_5*b_3+a_3*b_5                }
+    })
 
 ///
 
