@@ -19,18 +19,17 @@ newPackage(
 )
 
 export {
-    -- see ConnectionMatrices/reduce.m2
+    -- see ConnectionMatrices/normalForm.m2
     "normalForm",
     "baseFractionField",
-    -- see ConnectionMatrices/connectionMatrices.m2
+    -- connectionMatrices, connectionMatrix, standardMonomials are defined inline below
     "standardMonomials",
     "connectionMatrices",
     "connectionMatrix",
     -- see ConnectionMatrices/integrabilityCheck.m2
     "isIntegrable",
-    -- see ConnectionMatrices/gaugeMatrix.m2
-    "gaugeMatrix",
     -- see ConnectionMatrices/gaugeTransform.m2
+    "gaugeMatrix",
     "gaugeTransform",
     "isEpsilonFactorized",
 }

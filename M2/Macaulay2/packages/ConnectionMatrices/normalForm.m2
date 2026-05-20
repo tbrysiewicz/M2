@@ -25,8 +25,8 @@ makeWeylAlgebra(PolynomialRing, List) := opts -> (R, v) -> (
     if opts.SetVariables then use W;
     W)
 
--- This causes a crash
 -- Weyl Algebra with non-weighted lexicographic elimination order
+-- (exercised by the elimination-lex-order tests in tests.m2)
 makeWeylAlgebra(PolynomialRing) := opts -> R -> (
     n := length(gens R);
     v := (for i from 1 to n list 0);
@@ -185,7 +185,7 @@ normalForm(RingElement, List) := (f, G) -> (
 end--
 restart
 
-needs "reduce.m2"
+needs "normalForm.m2"
 -- Examples for testing with connection matrices
 -- Example 1.3: w = (0,0,2,1)
 D = makeWeylAlgebra(QQ[x,y], w = {0,0,2,1});
