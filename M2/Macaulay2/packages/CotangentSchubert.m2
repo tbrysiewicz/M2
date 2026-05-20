@@ -395,6 +395,9 @@ multidoc ///
   Caveat
    At the moment, the interactive part only works on nonequivariant puzzles.
 ///
+-- TODO: 12 of the symbols listed below as `undocumented` also appear in
+-- option-doc Usage sub-keys via [puzzle, Ktheory], [setupCotangent, Borel],
+-- etc.  Either give each its own doc node or remove it from doc Usage.
 undocumented {
     Presentation, Ktheory, Equivariant, Partial, Borel, EquivLoc,
     Paths, Labels, Length, Steps, Ktheory', Separation,
@@ -494,6 +497,8 @@ assert(#DP == 2)
 
 end
 
+-- TODO: ~50 lines of worked examples follow `end` and are dead code.  Several
+-- of them have natural `==` assertions and could be promoted to TEST blocks.
 (A,FF,I)=setupCotangent(1,2,Ktheory=>true)
 segreCls=sClass I
 segreInv=segreCls^(-1);
