@@ -34,8 +34,6 @@ export{
 "wittRingIdeal",
 "unWitt",
 "overringMap",
-"WittRing",
-"wittSub",
 "WittPolynomialRing",
 "WittRingMap",
 "baseMap",
@@ -54,12 +52,12 @@ export{
 "fSplittingHeight",
 "overring",
 "wittFrobenius",
-"truncation",
 "makeCoefficientFieldPrime",
 }
 
 protect tuple
 protect wittRings
+protect wittSub
 
 load "./WittVectors/WittConstructor.m2"
 load "./WittVectors/Kernels.m2"
