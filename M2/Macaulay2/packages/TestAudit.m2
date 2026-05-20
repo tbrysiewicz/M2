@@ -11,16 +11,18 @@ newPackage(
 
       export {
           "testAudit",
+          "testScore",
           "CommentReport",
           "SpeedReport",
-          "TestScore"
+          "ScoreReport"
       }
 
 CommentReport = symbol CommentReport
 SpeedReport = symbol SpeedReport
-TestScore = symbol TestScore
+ScoreReport = symbol ScoreReport
 
-testAudit = method(Options => {CommentReport => false, SpeedReport => false, TestScore => false})
+testAudit = method(Options => {CommentReport => false, SpeedReport => false, ScoreReport => false})
+testScore = method()
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -112,18 +114,6 @@ sourceLineMatches := (pkg, pat) -> (
     else (
         srcLines := sourceLinesBeforeEnd filename;
         apply(select(lineNumbers(#srcLines), i -> match(pat, srcLines#i)), i ->
-            snippet(srcLines#i, 72) | " (source: " | filename | ":" | toString(i + 1) | ")")
-    )
-)
-
--- Only comment lines count for FIXME/TODO markers; otherwise this package
--- reports its own implementation strings as TODOs.
-commentLineMatches := (pkg, pat) -> (
-    filename := try pkg#"source file" else "";
-    if filename === "" or not fileExists filename then {}
-    else (
-        srcLines := sourceLinesBeforeEnd filename;
-        apply(select(lineNumbers(#srcLines), i -> match("^ *--", srcLines#i) and match(pat, srcLines#i)), i ->
             snippet(srcLines#i, 72) | " (source: " | filename | ":" | toString(i + 1) | ")")
     )
 )
@@ -229,6 +219,40 @@ headerCommentLinesBefore := testInput -> (
     )
 )
 
+testCommentLineIndices := testInput -> (
+    loc := locate testInput;
+    filename := loc#0;
+    startLine := loc#1;
+    endLine := loc#3;
+    if not fileExists filename then {filename, {}}
+    else (
+        srcLines := lines get filename;
+        headerIndices := {};
+        i := startLine - 2;
+        while i >= 0 and match("^ *--", srcLines#i) do (
+            headerIndices = prepend(i, headerIndices);
+            i = i - 1;
+        );
+        testIndices := if startLine <= endLine then select(toList(startLine-1..endLine-1), j ->
+            j >= 0 and j < #srcLines and match("^ *--", srcLines#j)) else {};
+        {filename, unique(headerIndices | testIndices)}
+    )
+)
+
+taskMarkerMatches := inputs -> (
+    pat := "^ *--+ *([Ff][Ii][Xx][Mm][Ee]|[Tt][Oo][Dd][Oo])\\b";
+    unique flatten apply(lineNumbers(#inputs), i -> (
+        indexedLines := testCommentLineIndices inputs#i;
+        filename := indexedLines#0;
+        if filename === "" or not fileExists filename then {}
+        else (
+            srcLines := lines get filename;
+            apply(select(indexedLines#1, j -> match(pat, srcLines#j)), j ->
+                snippet(srcLines#j, 72) | " (source: " | filename | ":" | toString(j + 1) | ")")
+        )
+    ))
+)
+
 commentSectionLines := (label, comments) -> (
     {label | ":"} | apply(comments, c -> "    " | c)
 )
@@ -282,15 +306,13 @@ speedReportLines := (pkg, inputs) -> (
 )
 
 --------------------------------------------------------------------------------
--- TestScore report
+-- ScoreReport report
 --------------------------------------------------------------------------------
 
 -- Empty categories count as satisfied rather than penalizing small packages.
 scoreFraction := (covered, total) -> if total === 0 then 1 else covered / total
 
--- Compute a deliberately simple heuristic score.  It is meant to guide human
--- review, not certify test quality.
-scoreReportLines := (inputs, syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos) -> (
+scoreValues := (syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos) -> (
     testedExports := #syms - #untestedExports;
     testedFunctions := #funcs - #untestedFunctions;
     testedTypes := #types - #(select(apply(types, toString), name -> member(name, untestedExports)));
@@ -298,20 +320,27 @@ scoreReportLines := (inputs, syms, funcs, types, others, untestedExports, untest
     testedOptions := #optionPairs - #untestedOptions;
     testedTotal := #syms + #optionPairs;
     testedCovered := testedExports + testedOptions;
-    testedScore := 80 * scoreFraction(testedCovered, testedTotal);
-    silencedScore := if #silencedTests === 0 then 10 else 0;
-    todoScore := if #fixmeTodos >= 10 then 0 else 10 - #fixmeTodos;
-    percentScore := toRR(testedScore + silencedScore + todoScore);
+    testedScore := toRR(80 * scoreFraction(testedCovered, testedTotal));
+    silencedScore := max(0, 10 - #silencedTests);
+    todoScore := max(0, 10 - #fixmeTodos);
+    totalScore := toRR(testedScore + silencedScore + todoScore);
+    scoreLines := {
+        "ScoreReport: " | toString totalScore | " out of 100",
+        "    tested: " | toString(testedScore) | " out of 80",
+        "    exports covered: " | toString(toRR(100 * scoreFraction(testedExports, #syms))) | "% (" | toString(testedExports) | "/" | toString(#syms) | ")",
+        "    functions covered: " | toString(toRR(100 * scoreFraction(testedFunctions, #funcs))) | "% (" | toString(testedFunctions) | "/" | toString(#funcs) | ")",
+        "    types covered: " | toString(toRR(100 * scoreFraction(testedTypes, #types))) | "% (" | toString(testedTypes) | "/" | toString(#types) | ")",
+        "    other exports covered: " | toString(toRR(100 * scoreFraction(testedOthers, #others))) | "% (" | toString(testedOthers) | "/" | toString(#others) | ")",
+        "    options covered: " | toString(toRR(100 * scoreFraction(testedOptions, #optionPairs))) | "% (" | toString(testedOptions) | "/" | toString(#optionPairs) | ")",
+        "    silenced tests: " | toString(silencedScore) | " out of 10 (" | toString(#silencedTests) | " found)",
+        "    FIXME/TODO markers: " | toString(todoScore) | " out of 10 (" | toString(#fixmeTodos) | " found)"};
+    {totalScore, scoreLines}
+)
 
-    {"", "TestScore: " | toString percentScore | " out of 100",
-     "    tested: " | toString(toRR testedScore) | " out of 80",
-     "    exports covered: " | toString(toRR(100 * scoreFraction(testedExports, #syms))) | "% (" | toString(testedExports) | "/" | toString(#syms) | ")",
-     "    functions covered: " | toString(toRR(100 * scoreFraction(testedFunctions, #funcs))) | "% (" | toString(testedFunctions) | "/" | toString(#funcs) | ")",
-     "    types covered: " | toString(toRR(100 * scoreFraction(testedTypes, #types))) | "% (" | toString(testedTypes) | "/" | toString(#types) | ")",
-     "    other exports covered: " | toString(toRR(100 * scoreFraction(testedOthers, #others))) | "% (" | toString(testedOthers) | "/" | toString(#others) | ")",
-     "    options covered: " | toString(toRR(100 * scoreFraction(testedOptions, #optionPairs))) | "% (" | toString(testedOptions) | "/" | toString(#optionPairs) | ")",
-     "    no silenced tests: " | toString(silencedScore) | " out of 10",
-     "    FIXME/TODO markers: " | toString(todoScore) | " out of 10 (" | toString(#fixmeTodos) | " found)"}
+-- Compute a deliberately simple heuristic score.  It is meant to guide human
+-- review, not certify test quality.
+scoreReportLines := (inputs, syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos) -> (
+    {""} | (scoreValues(syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos))#1
 )
 
 --------------------------------------------------------------------------------
@@ -339,7 +368,7 @@ testAudit Package := opts -> pkg -> (
     untestedOptionLabels := apply(untestedOptions, pair -> pair#0 | ": " | pair#1);
 
     silencedTests := silencedTestMatches pkg;
-    fixmeTodos := commentLineMatches(pkg, "FIXME|TODO|fixme|todo");
+    fixmeTodos := taskMarkerMatches inputs;
 
     reportLines := {
         "exported: " | toString(#funcs) | " functions, " | toString(#types) | " types, " | toString(#others) | " other symbols",
@@ -355,7 +384,7 @@ testAudit Package := opts -> pkg -> (
         auditListLines("untested options", untestedOptionLabels) |
         auditListLines("silenced tests", silencedTests) |
         auditListLines("FIXME/TODO markers", fixmeTodos) |
-        (if opts.TestScore then scoreReportLines(inputs, syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos) else {}) |
+        (if opts.ScoreReport then scoreReportLines(inputs, syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos) else {}) |
         (if opts.SpeedReport then speedReportLines(pkg, inputs) else {}) |
         (if opts.CommentReport then commentReportLines inputs else {});
 
@@ -366,11 +395,32 @@ testAudit Package := opts -> pkg -> (
 -- Load documentation so package TEST blocks are available.
 testAudit String := opts -> pkgname -> testAudit(needsPackage(pkgname, LoadDocumentation => true), opts)
 
+testScore Package := pkg -> (
+    inputs := testInputs pkg;
+    code := testCodeStringFromInputs inputs;
+    syms := exportedSymbols pkg;
+    funcs := select(syms, isExportedFunction);
+    types := select(syms, isExportedType);
+    others := select(syms, s -> not isExportedFunction s and not isExportedType s);
+
+    untestedExports := select(apply(syms, toString), name -> not wordMatch(name, code));
+    untestedFunctions := select(apply(funcs, toString), name -> member(name, untestedExports));
+    optionPairs := flatten apply(funcs, f -> apply(optionNamesForSymbol f, opt -> {toString f, opt}));
+    untestedOptions := select(optionPairs, pair -> not wordMatch(pair#1, code));
+
+    silencedTests := silencedTestMatches pkg;
+    fixmeTodos := taskMarkerMatches inputs;
+
+    (scoreValues(syms, funcs, types, others, untestedExports, untestedFunctions, optionPairs, untestedOptions, silencedTests, fixmeTodos))#0
+)
+
+-- Load documentation so package TEST blocks are available.
+testScore String := pkgname -> testScore needsPackage(pkgname, LoadDocumentation => true)
+
 
 
       -* Documentation section *-
       beginDocumentation()
-
       doc ///
       Key
         TestAudit
@@ -381,121 +431,93 @@ testAudit String := opts -> pkgname -> testAudit(needsPackage(pkgname, LoadDocum
           The @TT "TestAudit"@ package provides a small report about the tests of a package.
           The report lists the number and location of tests, classifies how tests are organized, and gives simple textual checks for exported functions, options, silenced tests, and FIXME or TODO comments.
       ///
-
       doc ///
       Key
         testAudit
         (testAudit, Package)
         (testAudit, String)
+        CommentReport
+        [testAudit, CommentReport]
+        SpeedReport
+        [testAudit, SpeedReport]
+        ScoreReport
+        [testAudit, ScoreReport]
       Headline
         produce a test audit report for a package
       Usage
         testAudit pkg
+        testAudit(pkg, CommentReport => true, SpeedReport => true, ScoreReport => true)
       Inputs
         pkg:{Package,String}
+        CommentReport => Boolean
+        SpeedReport => Boolean
+        ScoreReport => Boolean
       Outputs
         :String
           the audit report
       Description
         Text
-          This function returns a report about the tests of @TT "pkg"@.
-          The report includes the number of tests, the source files containing tests, a style classification, exported functions and options not mentioned in tests, silenced tests, and FIXME or TODO comments.
+          Returns a string report about the tests of @TT "pkg"@.
+          The default report summarizes test sources, test organization, untested exported functions and options, silenced tests, and FIXME or TODO markers around test blocks.
         Text
-          The style line may include @TT "no tests"@, @TT "auxiliary"@, @TT "interspersed"@, or @TT "together"@.
-        Text
-          Optional sections can be included using the following Boolean options.
-        Tree
-          :Optional report sections
-            [testAudit, CommentReport]
-            [testAudit, SpeedReport]
-            [testAudit, TestScore]
+          Optional Boolean arguments add sections: @TT "CommentReport"@ includes comments attached to tests, @TT "SpeedReport"@ times tests with @TO check@, and @TT "ScoreReport"@ includes the heuristic score returned by @TO testScore@.
         Example
           testAudit "TestAudit"
       SeeAlso
-        CommentReport
-        SpeedReport
-        TestScore
+        testAudit
       ///
 
       doc ///
       Key
-        CommentReport
-        [testAudit, CommentReport]
+        testScore
+        (testScore, Package)
+        (testScore, String)
       Headline
-        include comments from tests in the audit report
+        compute the heuristic test score for a package
       Usage
-        testAudit(..., CommentReport => Boolean)
+        testScore pkg
+      Inputs
+        pkg:{Package,String}
+      Outputs
+        :RR
+          the heuristic test score
       Description
         Text
-          If @TT "CommentReport => true"@, then the report includes comments attached to or appearing inside tests.
-          Tests with no comments are omitted from this section.
+          This function returns only the numerical score that appears in the @TT "ScoreReport"@ section of @TO testAudit@.
+          The score is out of 100.
+        Example
+          testScore "TestAudit"
+      SeeAlso
+        testAudit
       ///
 
-      doc ///
-      Key
-        SpeedReport
-        [testAudit, SpeedReport]
-      Headline
-        include timing information for tests
-      Usage
-        testAudit(..., SpeedReport => Boolean)
-      Description
-        Text
-          If @TT "SpeedReport => true"@, then each test is run with @TO check@ and the report includes elapsed timing information.
-      ///
+--testAudit test
+TEST /// 
+  testAudit("TestAudit")
+///
 
-      doc ///
-      Key
-        TestScore
-        [testAudit, TestScore]
-      Headline
-        include a heuristic score in the audit report
-      Usage
-        testAudit(..., TestScore => Boolean)
-      Description
-        Text
-          If @TT "TestScore => true"@, then the report includes a heuristic score out of 100.
-        Text
-          Test Coverage: 80 points. 
-        Text
-          No Silenced Tests: 10 points.
-        Text
-          No FIXME/TODO: 10 points.
-      ///
+--CommentReport option test
+TEST /// 
+  testAudit("TestAudit", CommentReport=>true)
+///
 
-      --testAudit test
-      TEST /// 
-        pkg = loadPackage("Complexes", Reload=>true);
-        testAudit(pkg)
-      ///
-      
-      --CommentReport option test
-      TEST /// 
-        pkg = loadPackage("Complexes", Reload=>true);
-        testAudit(pkg, CommentReport=>true)
-      ///
+--SpeedReport option test (cannot call on TestAudit because)
+--infinite recursion...
+TEST /// 
+  testAudit("ConwayPolynomials", SpeedReport=>true)
+///
 
-      --SpeedReport option test
-      TEST /// 
-        pkg = loadPackage("Depth", Reload=>true);
-        testAudit(pkg, SpeedReport=>true)
-      ///
+--ScoreReport option test
+TEST ///
+  report = testAudit("TestAudit", ScoreReport=>true);
+///
 
-      --TestScore option test
-      TEST ///
-        pkg = loadPackage("Depth", Reload=>true);
-        report = testAudit(pkg, TestScore=>true);
-        assert match("TestScore: .* out of 100", report)
-      ///
+--testScore test
+TEST ///
+  score = testScore "TestAudit";
+  assert(score >= 0 and score <= 100)
+///
 
-      end--
+end
 
-      -* Development section *-
-      restart
-      debug needsPackage "TestAudit"
-      check "TestAudit"
-
-      uninstallPackage "TestAudit"
-      restart
-      installPackage "TestAudit"
-      viewHelp "TestAudit"
+restart
