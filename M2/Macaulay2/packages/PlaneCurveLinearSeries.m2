@@ -104,6 +104,8 @@ linearSeries(List, Ring) := Matrix => o -> (D0List, C) ->(
     D0 := fromCoordinates(D0List,C);
     linearSeries D0)
 
+-- TODO: the ///...///  block below is inert dev-scratch (no `TEST` prefix);
+-- migrate the useful content to a real TEST or delete the block.
 ///--case of a nodal cubic over a finite field
 restart
 loadPackage("PlaneCurveLinearSeries", Reload => true)
@@ -127,6 +129,8 @@ needsPackage "RandomPoints"
 
 
 
+-- TODO: the ///...///  block below is inert dev-scratch; the `--here--`
+-- bookmark and the restart/loadPackage driver inside are not test material.
 ///
 --here--
 restart
@@ -1008,6 +1012,11 @@ L = apply(16,i->(
 assert(L_0 == L_15)
 ///
 
+-- TODO: the ///...///  block below is the "nodal cubic" graveyard; it
+-- includes "assert numgens ideal ls == 1" (commented out) with author note
+-- "this assertion fails! Why??".  The value is in fact 2 (a degree-1 divisor
+-- on a rational curve has h^0 = 2), so the author's expectation was wrong.
+-- Promote a corrected version or delete the block.
 ///--case of a nodal cubic over a finite field
 restart
 loadPackage("PlaneCurveLinearSeries", Reload => true)
@@ -1124,6 +1133,10 @@ assert(geometricGenus C4 == 3)
 
 TEST///
 --hyperelliptic curves. Note that with g>=6, the conductor computation fails.
+-- TODO: this caveat about the upstream `conductor` failing for hyperelliptic
+-- curves of genus >= 6 should also appear in the doc for `linearSeries` and
+-- `geometricGenus`, so users encounter the Conductor => option before the
+-- failure.
 S = ZZ/101[a,b,c]
 q' = ideal(a,b)
 p' = ideal(b,c)
