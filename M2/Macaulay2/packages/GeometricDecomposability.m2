@@ -649,10 +649,12 @@ inTruncatedList(List, List) := Boolean => (L, LL) -> (
         -- return True if: for some list l of length n in LL, the first n terms of L are exactly l
         for l in LL do (
                 n := #l ;
+                if n == 0 or n > #L then continue;
+                matched := true;
                 for i from 0 to n-1 do (
-                        if L_i != l_i then break;
-                        return true;
+                        if L_i != l_i then (matched = false; break);
                         );
+                if matched then return true;
                 );
         return false;
         )
@@ -2290,6 +2292,96 @@ TEST///  -- [KR, Example 4.10]
 R = QQ[x..z,w,r,s];
 I = ideal( y*(z*s - x^2), y*w*r, w*r*(x^2 + s^2 + z^2 + w*r) );
 assert( sub(oneStepGVDNyI(I, y), R) == ideal(x^2*w*r+w*r*s^2+z^2*w*r+w^2*r^2) )
+///
+
+
+--------------------------------------------------------------------------------
+-- Regression: inTruncatedList checks the full prefix, not just the first
+-- element.  An earlier version of the function had the `return true` inside
+-- the inner loop and so returned true whenever the first elements matched.
+--------------------------------------------------------------------------------
+TEST///
+debug GeometricDecomposability
+assert(not inTruncatedList({1,2,3}, {}))
+assert(inTruncatedList({1,2,3}, {{1,2,3}}))
+assert(inTruncatedList({1,2,3}, {{1,2}}))
+-- first elements match but later do not -- the buggy version returned true
+assert(not inTruncatedList({1,2,3}, {{1,5}}))
+assert(inTruncatedList({1,2,3}, {{5,5},{1,2}}))
+assert(not inTruncatedList({1,2,3}, {{2}}))
+///
+
+
+--------------------------------------------------------------------------------
+-- Test the deletion and link aliases
+--------------------------------------------------------------------------------
+TEST///
+-- the exported names deletion and link are aliases for oneStepGVDNyI and
+-- oneStepGVDCyI respectively
+assert(deletion === oneStepGVDNyI)
+assert(link === oneStepGVDCyI)
+R = QQ[a,b,c,d];
+J = ideal(a*b - c*d, a*c - b*d);
+assert(deletion(J, a) == oneStepGVDNyI(J, a))
+assert(link(J, a) == oneStepGVDCyI(J, a))
+///
+
+
+--------------------------------------------------------------------------------
+-- Test findOneStepGVD option overrides (SquarefreeOnly, OnlyDegenerate,
+-- OnlyNondegenerate)
+--------------------------------------------------------------------------------
+TEST///
+S = QQ[a,b,c,d];
+J = ideal(a*b - c*d, a*c - b^2);
+assert(findOneStepGVD J == {a, c, d})
+-- SquarefreeOnly takes the fast path and accepts the same indeterminates here
+assert(findOneStepGVD(J, SquarefreeOnly => true) == {a, c, d})
+-- OnlyNondegenerate keeps all the nondegenerate one-step indeterminates
+assert(findOneStepGVD(J, OnlyNondegenerate => true) == {a, c, d})
+-- OnlyDegenerate is empty for this ideal
+assert(findOneStepGVD(J, OnlyDegenerate => true) == {})
+-- using both options simultaneously is an error
+assert(try (findOneStepGVD(J, OnlyDegenerate => true, OnlyNondegenerate => true); false) else true)
+///
+
+
+--------------------------------------------------------------------------------
+-- Test isGVD option overrides (CheckCM values, IsIdealHomogeneous,
+-- IsIdealUnmixed, CheckUnmixed, UniversalGB)
+--------------------------------------------------------------------------------
+TEST///
+R = QQ[x..z,w,r,s];
+I = ideal(y*(z*s - x^2), y*w*r, w*r*(z^2 + z*x + w*r + s^2));
+-- I is GVD ([KR, Example 2.16])
+gvd = isGVD I;
+assert(gvd)
+-- The three CheckCM values "always", "once", "never" all agree on this ideal
+assert(isGVD(I, CheckCM => "always") == gvd)
+assert(isGVD(I, CheckCM => "once") == gvd)
+assert(isGVD(I, CheckCM => "never") == gvd)
+-- An unrecognized CheckCM value is an error
+assert(try (isGVD(I, CheckCM => "bogus"); false) else true)
+-- IsIdealHomogeneous and IsIdealUnmixed bypass internal checks; same answer
+assert(isGVD(I, IsIdealHomogeneous => true) == gvd)
+assert(isGVD(I, IsIdealUnmixed => true) == gvd)
+-- CheckUnmixed => false skips the unmixed check
+assert(isGVD(I, CheckUnmixed => false) == gvd)
+-- UniversalGB => true on a monomial ideal, whose generators are a UGB
+J = ideal(x*y, x*z);
+assert(isGVD(J, UniversalGB => true) == isGVD J)
+///
+
+
+--------------------------------------------------------------------------------
+-- The chain isLexCompatiblyGVD => isGVD => isWeaklyGVD on a concrete ideal
+--------------------------------------------------------------------------------
+TEST///
+R = QQ[x..z];
+I = ideal(x-y, x-z);
+assert(isLexCompatiblyGVD(I, {x,y,z}))
+assert(isGVD I)
+assert(isWeaklyGVD I)
 ///
 
 
