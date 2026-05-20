@@ -1171,21 +1171,6 @@ jumpingDenominators(Matrix,ZZ) := (M,r) -> (
 
 
 --------------------------------------------------------------------------------
--- VIA DMODULES ----------------------------------------------------------------
---------------------------------------------------------------------------------
-
--- TEST ///
---   needsPackage "MultiplierIdeals";
---   R = QQ[x,y];
---   -- use R;
---   I = ideal(y^2-x^3,R);
---   assert(logCanonicalThreshold(I) == 5/6);
---   assert(multiplierIdealViaDmodules(I,1/2) == ideal(1_R));
---   assert(multiplierIdealViaDmodules(I,5/6) == ideal(x,y));
---   assert(multiplierIdealViaDmodules(I,1) == I);
--- ///  
-
---------------------------------------------------------------------------------
 -- MONOMIAL IDEALS -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -1642,10 +1627,9 @@ TEST /// -- Example 3.9 of [Johnson, 2003] (thesis)
   R = QQ[x_1..x_12];
   X = genericMatrix(R,3,4);
   assert(I(X) == J(X));
-  -- TODO: re-enable these tests, which are commented due to failing github builds
-  -- R = QQ[x_1..x_15];
-  -- X = genericMatrix(R,3,5);
-  -- assert(I(X) == J(X));
+  R = QQ[x_1..x_15];
+  X = genericMatrix(R,3,5);
+  assert(I(X) == J(X));
 ///
 
 TEST /// -- Example 5.7 of [Johnson, 2003] (thesis)
