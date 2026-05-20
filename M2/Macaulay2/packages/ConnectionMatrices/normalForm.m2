@@ -73,6 +73,16 @@ inferWeylAlgebra = F -> (
 
 -- Graded associative ring of the rational Weyl algebra
 -- Used for bookkeeping elements in R
+--
+-- TODO: scope gotcha worth smoothing over. R is `(baseFractionField D)[d_1..d_n]`, so its
+-- coefficient ring F is a commutative fraction field whose generators have the SAME names
+-- as D's coordinate variables (x, y, ...). However, `use R` only exposes R's own
+-- generators (the d_i); the bare names x, y, ... continue to point to D's non-commutative
+-- Weyl-algebra elements. As a result, expressions like `x/y` evaluated in test/user code
+-- error with "fraction field of non-commutative ring requested". Workaround for callers:
+-- access the coefficient-ring vars positionally, e.g. `F = coefficientRing R; xF = F_0;`,
+-- and build R-expressions from xF, yF, R_0, R_1, .... A future improvement would be to
+-- provide a helper that rebinds the names to the F-generators on entry to a scope.
 rationalWeylAlgebra = memoize((D) -> (
     createDpairs D;
     w := (((options(D)).MonomialOrder)#1)#1;
