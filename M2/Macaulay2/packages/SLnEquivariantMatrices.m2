@@ -857,7 +857,7 @@ doc ///
 	    d = 3, m = 2 
 	    W = sl2EquivariantVectorBundle(d,m)
 	Text
-	    By default, @TO slEquivariantVectorBundle@ defines the vector bundle over a projective space whose coordinate ring has rational coefficients. 
+	    By default, @TO sl2EquivariantVectorBundle@ defines the vector bundle over a projective space whose coordinate ring has rational coefficients.
 	    The optional argument @TO CoefficientRing@ allows one to change the coefficient ring.
 	Example
 	    d = 3, m = 2 
@@ -905,7 +905,7 @@ doc ///
 	M = sl2EquivariantConstantRankMatrix(m,d,CoefficientRing=>C)
     Description
       	Text
-       	    This is an option to tell @TO slEquivariantConstantRankMatrix@ to define the matrix
+       	    This is an option to tell @TO sl2EquivariantConstantRankMatrix@ to define the matrix
 	    over a polynomial ring with coefficients in the ring {\tt C}.
 ///
 
@@ -918,7 +918,7 @@ doc ///
 	W = sl2EquivariantVectorBundle(m,d,CoefficientRing=>C)
     Description
       	Text
-       	    This is an option to tell @TO slEquivariantVectorBundle@ to define the vector bundle
+       	    This is an option to tell @TO sl2EquivariantVectorBundle@ to define the vector bundle
 	    over a projective space whose coordinate ring has coefficients in the ring {\tt C}.
 ///
 
@@ -960,6 +960,62 @@ TEST ///
 d = 4, m = 3
 W = sl2EquivariantVectorBundle(d,m);
 assert(rank W == d-1)
+///
+
+TEST ///
+-- slIrreducibleRepresentationsTensorProduct over SL(3): V_2 (x) V_2 has total
+-- dimension 6*6 = 36, decomposing into three irreducible components of
+-- dimensions 15, 15, 6.
+D = slIrreducibleRepresentationsTensorProduct(2, 2, 2);
+assert(#D == 3)
+assert(apply(D, length) == {15, 15, 6})
+assert(sum apply(D, length) == 36)
+///
+
+TEST ///
+-- slEquivariantConstantRankMatrix respects the CoefficientRing option,
+-- and the (PolynomialRing, ZZ, ZZ) dispatch also produces a constant-rank matrix.
+M = slEquivariantConstantRankMatrix(2, 3, 2, CoefficientRing => ZZ/7);
+assert(char coefficientRing ring M == 7)
+assert(rank M == numRows M - 1)
+R = QQ[y_0, y_1];
+M2 = slEquivariantConstantRankMatrix(R, 3, 2);
+assert(rank M2 == numRows M2 - 1)
+///
+
+TEST ///
+-- slEquivariantVectorBundle respects CoefficientRing and accepts a
+-- PolynomialRing as the first argument.
+W = slEquivariantVectorBundle(1, 3, 3, CoefficientRing => ZZ/17);
+assert(class W === CoherentSheaf)
+assert(rank W == 2)
+R = QQ[y_0, y_1];
+W2 = slEquivariantVectorBundle(R, 3, 3);
+assert(class W2 === CoherentSheaf)
+assert(rank W2 == 2)
+///
+
+TEST ///
+-- sl2EquivariantConstantRankMatrix respects CoefficientRing and accepts a
+-- PolynomialRing as the first argument.
+M = sl2EquivariantConstantRankMatrix(4, 3, CoefficientRing => ZZ/11);
+assert(char coefficientRing ring M == 11)
+assert(rank M == numRows M - 1)
+S = QQ[z_0, z_1, z_2, z_3, z_4];
+M2 = sl2EquivariantConstantRankMatrix(S, 3);
+assert(rank M2 == numRows M2 - 1)
+///
+
+TEST ///
+-- sl2EquivariantVectorBundle respects CoefficientRing and accepts a
+-- PolynomialRing as the first argument.
+W = sl2EquivariantVectorBundle(4, 3, CoefficientRing => ZZ/19);
+assert(class W === CoherentSheaf)
+assert(rank W == 3)
+S = QQ[z_0, z_1, z_2, z_3, z_4];
+W2 = sl2EquivariantVectorBundle(S, 3);
+assert(class W2 === CoherentSheaf)
+assert(rank W2 == 3)
 ///
 
 --restart
