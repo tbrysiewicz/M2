@@ -102,6 +102,7 @@ co1Fitting(Module) := M -> (
 affinePart = method(TypicalValue => Matrix)
 	 	    
 affinePart(Matrix,List) := (M,L) -> (
+    -- TODO: soft-failure path -- consider raising an error rather than printing and returning null when #L =!= numrows M
     if not #L == numrows M then (print "Not correct number of rows";return;);
     M=mutableMatrix M;
     R:=ring M;
@@ -127,6 +128,7 @@ gotzmannTest = method();
 gotzmannTest(Module,ZZ,List) := (M,d,L) -> (
     S:=ring M;
     p:=rank M;
+    -- TODO: soft-failure path -- consider raising an error rather than printing and returning null when M is not a free module
     if not relations M == 0_S then (print "Not free";return;);
     v:=flatten entries vars S;
     x:=v_0;
@@ -159,6 +161,7 @@ quotScheme = method();
 quotScheme(Module,ZZ,List):=(Q,n,L) -> (
     a:=symbol a;
     S:=ring Q;
+    -- TODO: soft-failure path -- consider raising an error rather than printing and returning null when Q is not a free module
     if not relations Q == 0_S then (print "Not a free module";return;);
     p:=rank Q;
     r:=#(flatten entries vars S)+1;    
@@ -169,6 +172,7 @@ quotScheme(Module,ZZ,List):=(Q,n,L) -> (
     B:=ZZ[a_1..a_(q*p*n)];
     M:=matrix{toList(a_1..a_(q*p))};
     for w from 2 to n do M=M||matrix{toList(a_((w-1)*q*p+1)..a_(w*q*p))};
+    -- TODO: soft-failure path -- consider raising an error (or documenting the null return) when L is not a Gotzmann set; current behavior contradicts the documented Ideal output type
     if not gotzmannTest(Q,d,L) then (print "NO"; return;);
     M=affinePart(M,L);
     K:=gens ker M;
