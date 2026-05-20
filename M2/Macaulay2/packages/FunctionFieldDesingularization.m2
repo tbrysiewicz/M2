@@ -651,7 +651,7 @@ document {
      }	   
 
 TEST ///
-   fout = openOut "/dev/null";
+   fout = openOut temporaryFileName();
          F = QQ;
          d = 1;
         P0 = F[a_{0,0}..a_{0,d}];
@@ -666,10 +666,9 @@ TEST ///
         e1 = ideal(a_{0,0},a_{0,1});
       tree = arcs(b1,e1,n1,fout);     
       fout << close;
-      -- assert(globalpars==0);
 ///
 TEST ///
-      fout := openOut "/dev/null" 
+      fout := openOut temporaryFileName() 
          F := ZZ/2
          d := 1
         P0 := F[a_{0,0}..a_{0,d}];
@@ -691,10 +690,9 @@ time tree1 := arcs(b0,e0,n0,fout);
 	            a_{0,1});
 time tree2 := arcs(b1,e1,n1,fout);     
       fout << close
-      -- assert(globalpars==0);
 ///      
 TEST ///
-     fout := openOut "/dev/null";
+     fout := openOut temporaryFileName();
         F := QQ
         d := 2
        P0 := F[a_{0,0}..a_{0,d}];
@@ -712,7 +710,7 @@ time tree := arcs(b0,e0,n0,fout);
      assert(#tree#0==5)
 ///     
 TEST ///
-     fout := openOut "/dev/null";
+     fout := openOut temporaryFileName();
         F := QQ
         d := 2
        P0 := F[a_{0,0}..a_{0,d}];
@@ -730,7 +728,7 @@ time tree := arcs(b0,e0,n0,fout);
      assert(#tree#0==4)
 ///     
 TEST ///
-     fout := openOut "/dev/null"
+     fout := openOut temporaryFileName()
         F := QQ
         d := 2
        P0 := F[a_{0,0}..a_{0,d}];
@@ -750,7 +748,7 @@ time tree := arcs(b0,e0,n0,fout);
      assert(#tree#0==8)
 ///
 TEST ///
-     fout := openOut "/dev/null"
+     fout := openOut temporaryFileName()
         F := ZZ/2
         d := 3
        P0 := F[a_{0,0}..a_{0,d}];
@@ -784,7 +782,7 @@ time Tree := arcs(B0,E0,N0,fout);
      assert(#tree#0==2)
 ///
 TEST ///
-     fout := openOut "/dev/null"
+     fout := openOut temporaryFileName()
         F := ZZ/2
         d := 2
        P0 := F[a_{0,0}..a_{0,d}];
@@ -818,7 +816,7 @@ time Tree := arcs(B0,E0,N0,fout);
      assert(#tree#0==2)
 ///
 TEST ///
-     fout := openOut "/dev/null"
+     fout := openOut temporaryFileName()
         F := ZZ/2
         d := 2
        P0 := F[a_{0,0}..a_{0,d}];
@@ -836,6 +834,18 @@ TEST ///
 time tree := arcs(b0,e0,n0,fout);
      fout << close
      assert(#tree#0==1)
+///
+
+TEST ///
+-- negLexMatrix(d) returns a (d+1)x(d+1) matrix with -1 on the anti-diagonal
+-- and 0 elsewhere; this is the weight matrix used to set up a negative-lex
+-- monomial order on a polynomial ring of d+1 variables.
+assert(negLexMatrix 0 == matrix{{-1}});
+assert(negLexMatrix 1 == matrix{{0,-1},{-1,0}});
+assert(negLexMatrix 2 == matrix{{0,0,-1},{0,-1,0},{-1,0,0}});
+M = negLexMatrix 3;
+assert(numRows M == 4 and numColumns M == 4);
+assert(all(0..3, i -> all(0..3, j -> M_(i,j) == (if j == 3-i then -1 else 0))));
 ///
 
 end
