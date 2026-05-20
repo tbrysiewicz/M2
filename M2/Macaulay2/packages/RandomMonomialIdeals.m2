@@ -66,6 +66,11 @@ newPackage(
 	     }
     	)
 
+-- TODO: the option symbols `Coefficients`, `VariableName`, `ShowTally`,
+-- `SaveBettis`, and `CountPure` are exported and documented but no TEST
+-- passes them with a non-default value and asserts the observable effect.
+-- A single flip-and-assert TEST per option would catch regressions in
+-- option dispatch.
 export {
     "randomMonomialSets",
     "randomMonomialSet",
@@ -2177,6 +2182,12 @@ doc ///
 
 --******************************************--
 -- TESTS     	     	       	    	    --
+-- TODO: every TEST below calls one of the `random*` entry points but none
+-- of them invokes `setRandomSeed`.  The current suite happens to be
+-- robust because most tests use p=0.0 or p=1.0 (deterministic boundary
+-- cases) -- but any TEST whose assertions depend on the RNG state would
+-- be a latent flakiness vector.  Seed the suite (e.g. `setRandomSeed 0`
+-- at the top of each TEST that calls a non-boundary `random*`).
 --******************************************--
 
 --************************--
