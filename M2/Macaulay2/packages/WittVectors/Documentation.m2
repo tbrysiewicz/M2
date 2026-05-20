@@ -352,6 +352,11 @@ doc ///
 --------- fSplittingHeight
 --------------------------------
 
+-- TODO: the fSplittingHeight doc node below has misaligned Text/Example
+-- pairings: the "should give infinity" Example only assigns S and I and
+-- never calls fSplittingHeight, and the "should give 1" Text actually
+-- describes the regular-sequence Example that follows (which errors).
+-- Fix the pairing or remove the stale examples.
 doc ///
 	Key
 	 fSplittingHeight

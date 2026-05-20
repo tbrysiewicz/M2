@@ -11,6 +11,10 @@ assert( (try witt(2,QQ)) == null)
 assert( (try witt(2,QQ[x])) == null)
 ///
 
+-- TODO: this TEST is slow (~8 s); it computes fSplittingHeight on four
+-- distinct ideals (heights 1..4), with the height-4 step dominating.
+-- Consider splitting the height-4 case into a separate test or replacing
+-- it with a smaller ideal of the same height.
 --TEST 1
 TEST /// -- Check that the fSplittingHeight method gives back the correct number
     S = (ZZ/3)[x,y,z,w]
@@ -340,6 +344,10 @@ assert( (w1 + w2) + w3 == w1 + (w2 + w3) )
 ///
 
 
+-- TODO: this TEST is slow (~9 s) -- fSplittingHeight of a height-8
+-- example.  The runtime is intrinsic to the height-8 computation; if
+-- it becomes a CI bottleneck, replace with a smaller height (e.g. 3
+-- or 4) or move the height-8 example to a separate `check`-only suite.
 --TEST 26
 TEST ///
 R=ZZ/3[x_0,x_1,x_2,x_3]
