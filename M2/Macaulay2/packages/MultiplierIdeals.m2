@@ -105,6 +105,11 @@ newPackage(
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- TODO: `multiplierIdeal` and `logCanonicalThreshold` are commented out
+-- of the export list here.  The package nonetheless documents and extends
+-- both symbols (they arrive via PackageExports => {"HyperplaneArrangements"}).
+-- Either re-enable the exports for clarity or add a comment explaining
+-- the deliberate method-extension-without-re-export pattern.
 export {
   -- "multiplierIdeal",
   -- "logCanonicalThreshold",
@@ -1174,6 +1179,9 @@ jumpingDenominators(Matrix,ZZ) := (M,r) -> (
 -- MONOMIAL IDEALS -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- TODO: `needsPackage "MultiplierIdeals"` usage across the TEST blocks
+-- below is inconsistent -- a few include it, most do not.  Both styles
+-- work under `check`, but pick one and apply uniformly.
 -- Compute a NewtonPolyhedron and intmat2monomialIdeal:
 -- go from Ideal -> Polyhedron -> Ideal, see if it is the same again
 TEST ///
@@ -1668,7 +1676,11 @@ TEST ///
 --------------------------------------------------------------------------------
 
 beginDocumentation()
-document { 
+-- TODO: this top-level doc node has Headline + PARA + References but no
+-- runnable EXAMPLE; `viewHelp MultiplierIdeals` is therefore pure prose.
+-- Adding a small EXAMPLE (e.g. `logCanonicalThreshold(ideal(y^2-x^3))`)
+-- would improve discoverability.
+document {
   Key => MultiplierIdeals,
   Headline => "multiplier ideals",
   PARA {
