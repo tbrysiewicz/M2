@@ -128,7 +128,9 @@ LatticePolarizedK3surface Sequence := (S,ab) -> (
     if f#"image" === null and char coefficientRing S <= 65521 and genus(S,1,0) > 3 then image(f,"F4");
     T := new EmbeddedK3surface from image f;
     if dim ambient T <= 2 then error "the linear system is not very ample";
-    -- (???) this fixes a bug in conversion of output to net, but it is a bit dangerous.
+    -- TODO: this fixes a bug in conversion of output to net by manually setting "dimVariety" = 2,
+    -- but the assignment is fragile (it pokes at an internal cache key). A regression test pinning
+    -- the net / texMath round-trip would make the danger observable if the internals change.
     T#"dimVariety" = 2;
     T.cache#"sectionalGenus" = genus(S,a,b);
     -- if degrees T =!= {({2},binomial(genus(T)-2,2))} then <<"--warning: the degrees for the generators are not as expected"<<endl;
@@ -1162,6 +1164,13 @@ assert(instance(tetragonalK3 7, LatticePolarizedK3surface));
 assert(instance(pentagonalK3 8, LatticePolarizedK3surface));
 ///
 
+-- TODO: this `end;` silently demotes every TEST block below to unreachable code -- they are
+-- never seen by `check`. Decide whether to (a) revive them as live tests (some compute K3s of
+-- genus 20-22 and need a slow-test gate), or (b) delete them as stale.
+-- TODO: two of the dead TESTs below are duplicates of live ones already in this file --
+--   `-- randomMukaiThreefoldContainingLine` (live at line 1097, dead clone below)
+--   `-- randomPointedMukaiThreefold`        (live at line 1082, dead clone below)
+-- If the post-`end;` region is revived, those duplicates should be reconciled first.
 end;
 
 -- Hard tests
