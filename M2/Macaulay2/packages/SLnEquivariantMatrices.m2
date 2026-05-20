@@ -295,6 +295,11 @@ slEquivariantConstantRankMatrix (PolynomialRing,ZZ,ZZ) := opts -> (R,d,m) -> (
    return M;
 )
 
+-- TODO: the four-argument dispatches that follow -- where the user supplies
+-- the target polynomial ring X explicitly -- are documented but not exercised
+-- by any TEST block (this applies to both slEquivariantConstantRankMatrix
+-- and slEquivariantVectorBundle, each with (ZZ,ZZ,ZZ,PolynomialRing) and
+-- (PolynomialRing,ZZ,ZZ,PolynomialRing) overloads).
 slEquivariantConstantRankMatrix (ZZ,ZZ,ZZ,PolynomialRing) := opts -> (n,d,m,X) -> (
     if n <= 0 then error "\targument 1 : expected a positive integer";
     if d <= 0 then error "\targument 2 : expected a positive integer";
@@ -506,6 +511,9 @@ matrixCoefficient(ZZ,ZZ,ZZ,ZZ) := (i,j,d,m) -> (
 --****************************************************************************--
 beginDocumentation()
 
+-- TODO: this package-overview doc node describes three capabilities but
+-- carries no Example.  Add a small runnable Example so `viewHelp
+-- SLnEquivariantMatrices` is not pure prose.
 doc ///
     Key
     	SLnEquivariantMatrices
@@ -870,6 +878,10 @@ doc ///
 	    W = sl2EquivariantVectorBundle(R,m)
 ///
 
+-- TODO: this and the next three CoefficientRing option-key doc nodes
+-- carry no SeeAlso cross-links to the rest of the family (and no
+-- runnable Example).  Adding SeeAlso pointers to the parent function
+-- and its sl/sl2 sibling would improve help-page navigation.
 doc ///
     Key
         [slEquivariantConstantRankMatrix,CoefficientRing]
