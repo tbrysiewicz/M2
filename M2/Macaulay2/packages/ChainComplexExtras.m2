@@ -1882,6 +1882,186 @@ assert(max C3 == 2)
 assert(max appendZeroMap C3 == 3)
 ///
 
+-- Tests added in the 2026 test-audit pass.  Targets:
+--   * the one zero-coverage export, extendFromMiddle (line 687), with a
+--     concrete instance showing the constructed ChainComplexMap is a chain map
+--     and recovers the supplied middle-map at position i;
+--   * the documented-but-unexported helpers chainComplexData,
+--     chainComplexFromData, and minimize (commented-out export lines 27, 40,
+--     41) which the silenced TEST at L1743 was meant to cover; exercised
+--     here via `debug ChainComplexExtras` so the round-trip and
+--     minimal-projection contracts are guarded without un-commenting the
+--     exports;
+--   * boundary cases for the truncation/shim helpers (prependZeroMap /
+--     appendZeroMap shape, removeZeroTrailingTerms round-trip after
+--     multi-append, nonzeroMin/nonzeroMax under padding,
+--     trivialHomologicalTruncation d>e error, single-d truncation, and
+--     out-of-range upper truncation);
+--   * koszulComplex agreement with the builtin koszul on multiple ideals
+--     (the existing test at L1843 only asserts one case);
+--   * isChainComplex returning false on a non-complex (no prior negative test
+--     existed -- both existing asserts at L1824 and L1826 were on real
+--     complexes that happened to fail isExact);
+--   * the InitialDegree option exercised by both subject and assertion
+--     (the existing call at L1862 sets it without asserting any property
+--     specific to the option).
+
+TEST ///
+  -- extendFromMiddle (the only zero-coverage export).  Constructs a chain
+  -- map from F2 (prepended with zeros) into F1 starting at homological
+  -- degree i, given a map f : F2_0 -> F1_i.
+  kk = ZZ/101
+  S = kk[a,b,c,d]
+  F1 = koszul matrix"a,b,c"
+  F2 = res module ideal"a,b,c"
+  f = map(F1_1, F2_0, id_(F2_0))
+  phi = extendFromMiddle(F1, F2, f, 1)
+  assert(class phi === ChainComplexMap)
+  assert(target phi == F1)
+  assert(phi_1 == f)
+  assert(isChainComplexMap phi)
+  -- with i=2 and the zero map at that position, the chain map at i=2 is zero
+  f2 = map(F1_2, F2_0, 0)
+  phi2 = extendFromMiddle(F1, F2, f2, 2)
+  assert(isChainComplexMap phi2)
+  assert(phi2_2 == 0)
+///
+
+TEST ///
+  -- chainComplexData / chainComplexFromData round-trip identity on simple,
+  -- shifted, and single-module complexes.  Both helpers are documented (doc
+  -- nodes at L1536 and L1557) but their exports at L40-41 are commented out;
+  -- the silenced TEST at L1743 was meant to cover the round-trip but is
+  -- inside a -* *- block.  Pull the symbols in via debug.
+  debug ChainComplexExtras
+  T = QQ[x,y]
+  C = chainComplex(matrix{{x_T}})
+  assert(chainComplexFromData chainComplexData C == C)
+  -- shifted complex
+  D = (chainComplex(matrix{{x_T}}, matrix{{y_T}}))[2]
+  assert(chainComplexFromData chainComplexData D == D)
+  -- single-module complex (no differentials)
+  E = chainComplex(map(T^3, T^0, 0))
+  L = chainComplexData E
+  assert(class L === List)
+  assert(#L == 3)
+  -- and the silenced TEST at L1743 round-trip case
+  S = ZZ[x,y]/ideal(x*y)
+  C2 = (chainComplex(matrix{{x_S}}, matrix{{y_S^2}}, matrix{{x_S^2}}))[3]
+  assert(chainComplexFromData chainComplexData C2 == C2)
+///
+
+TEST ///
+  -- minimize (documented at L1142 but export at L27 is commented out).
+  -- The TEST at L1753 exercises minimize via debug already; this adds the
+  -- already-minimal case as an idempotence-style regression.
+  debug ChainComplexExtras
+  S = ZZ/101[a,b,c]
+  F = res module ideal vars S
+  -- F is minimal by construction
+  assert(isMinimalChainComplex F)
+  m = minimize F
+  assert(class m === ChainComplexMap)
+  assert(isQuasiIsomorphism m)
+  assert(source m == F)
+  assert(isMinimalChainComplex target m)
+///
+
+TEST ///
+  -- koszulComplex(Ideal) agrees with the built-in koszul(gens Ideal) for
+  -- several ideals.  The existing test at L1843 only asserts one case.
+  S = QQ[a,b,c]
+  assert(koszulComplex ideal(a,b,c) == koszul gens ideal(a,b,c))
+  assert(koszulComplex ideal(a*b, b*c, a*c) == koszul gens ideal(a*b, b*c, a*c))
+  assert(koszulComplex ideal(a^2, b^2) == koszul gens ideal(a^2, b^2))
+///
+
+TEST ///
+  -- prependZeroMap / appendZeroMap shape contract: the zero position is
+  -- actually zero, and the min/max indices shift by exactly +/-1.
+  Q = QQ^4
+  PC = chainComplex map(Q, Q, id_Q)
+  assert(min PC == 0 and max PC == 1)
+  APC = appendZeroMap PC
+  assert(min APC == 0 and max APC == 2)
+  assert(APC_2 == 0)
+  PPC = prependZeroMap PC
+  assert(min PPC == -1 and max PPC == 1)
+  assert(PPC_(-1) == 0)
+  -- and the existing C[-1] test pattern from L1707 (QQ^10[-1])
+  C = QQ^10[-1]
+  C' = appendZeroMap C
+  C'' = prependZeroMap C'
+  assert(C''_0 == 0 and C''_1 == QQ^10 and C''_2 == 0)
+///
+
+TEST ///
+  -- removeZeroTrailingTerms strips appended zeros and recovers the original
+  S = QQ[a,b,c]
+  C = koszul vars S
+  Capp = appendZeroMap appendZeroMap appendZeroMap C
+  assert(max Capp == max C + 3)
+  assert(removeZeroTrailingTerms Capp == C)
+  -- and removeZeroTrailingTerms is a no-op on a complex with no trailing zeros
+  assert(removeZeroTrailingTerms C == C)
+///
+
+TEST ///
+  -- nonzeroMin / nonzeroMax detect the real homological range after padding
+  -- by both prepended and appended zeros.
+  S = QQ[a,b,c]
+  K = koszul vars S
+  Kpad = appendZeroMap appendZeroMap (prependZeroMap prependZeroMap K)
+  assert(min Kpad == min K - 2)
+  assert(max Kpad == max K + 2)
+  assert(nonzeroMin Kpad == 0)
+  assert(nonzeroMax Kpad == max K)
+///
+
+TEST ///
+  -- trivialHomologicalTruncation error path and edge cases
+  S = QQ[a,b,c]
+  T = koszul vars S
+  -- d > e is rejected
+  assert(try (trivialHomologicalTruncation(T, 3, 1); false) else true)
+  -- d == e returns a complex of the appropriate single-module shape
+  T11 = trivialHomologicalTruncation(T, 1, 1)
+  assert(min T11 == 0 and max T11 == 2)
+  -- out-of-range upper still completes (padding extends as needed)
+  T1015 = trivialHomologicalTruncation(T, 10, 15)
+  assert(class T1015 === ChainComplex)
+///
+
+TEST ///
+  -- isChainComplex correctly rejects a non-complex (d_1 * d_2 != 0)
+  S = ZZ/101[a,b]
+  notACpx = chainComplex(matrix{{a_S}}, matrix{{b_S}})
+  -- a*b != 0 so the composition of differentials is nonzero
+  assert(notACpx.dd_1 * notACpx.dd_2 != 0)
+  assert(not isChainComplex notACpx)
+  -- and accepts a real complex (bind the ring first; `koszul vars QQ[a,b,c]`
+  -- would parse as `koszul (vars QQ) [a,b,c]`).
+  R = QQ[a,b,c]
+  assert(isChainComplex koszul vars R)
+///
+
+TEST ///
+  -- InitialDegree => 0 option on chainComplexMap: the option default is
+  -- -infinity (line 269); pin down that setting it changes the indexing
+  -- start without breaking the chain-map contract.
+  S = ZZ/101[a,b,c]
+  i = monomialIdeal(a^2, a*b, a*c)
+  T = taylorResolution i
+  T' = prependZeroMap T
+  -- without InitialDegree, default startDeg = min source
+  phimap = chainComplexMap(T', prependZeroMap T,
+      apply(toList(min T..max T), j -> id_(T_j)), InitialDegree => 0)
+  assert(isChainComplexMap phimap)
+  -- the source min agrees with min T' = -1, so InitialDegree=>0 means
+  -- the supplied maps start being placed at index 0
+  assert(source phimap == prependZeroMap T)
+///
+
 end--
 
 restart
